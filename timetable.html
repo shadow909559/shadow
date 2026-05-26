@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exam Timetable - Smart College Navigation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      background: #f4f8ff;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      height: 100vh;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      padding: 25px 20px;
+      position: fixed;
+    }
+
+    .sidebar h2 {
+      color: #1a73e8;
+      margin-bottom: 40px;
+    }
+
+    .sidebar a {
+      display: block;
+      text-decoration: none;
+      color: #333;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    /* Main */
+    .main {
+      margin-left: 240px;
+      width: 100%;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: #1a73e8;
+      color: white;
+      padding: 18px 30px;
+      font-size: 18px;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Content */
+    .content {
+      padding: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      margin-bottom: 40px;
+      transition: 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 30px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      margin-bottom: 20px;
+      color: #1a73e8;
+    }
+
+    input {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      width: 100%;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #1a73e8;
+      outline: none;
+      box-shadow: 0 0 0 2px #e8f0fe;
+    }
+
+    button {
+      padding: 10px 18px;
+      background: #1a73e8;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #1558b0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th {
+      background: #1a73e8;
+      color: white;
+      padding: 14px;
+      text-align: center;
+    }
+
+    td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    tr:hover {
+      background: #f1f6ff;
+    }
+
+    tr.today {
+      background-color: #e8f0fe !important;
+      font-weight: 600;
+    }
+
+    .empty-msg {
+      margin-top: 20px;
+      font-weight: 500;
+      color: red;
+    }
+
+    .action-btn {
+      margin: 2px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>College 🎓</h2>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="timetable.html">Timetable</a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <div class="topbar">
+    Exam Timetable 📅
+  </div>
+
+  <div class="content">
+
+    <!-- Search -->
+    <div class="card">
+      <h3>Search Exam</h3>
+      <input type="text" id="searchInput" placeholder="Search by Subject">
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="card" id="adminPanel">
+      <h3>Add Timetable Entry</h3>
+      <input type="text" id="subject" placeholder="Subject">
+      <input type="date" id="date">
+      <input type="time" id="time">
+      <input type="text" id="room" placeholder="Room">
+      <button id="addBtn">Add Entry</button>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <h3>All Exams</h3>
+      <table id="timetableTable"></table>
+      <div id="emptyMessage" class="empty-msg"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  deleteDoc,
+  doc,
+  Timestamp,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBzMLug_TU5BW7fxEpAND4KiyVjeWcxcrs",
+  authDomain: "college-location-app.firebaseapp.com",
+  projectId: "college-location-app",
+  storageBucket: "college-location-app.firebasestorage.app",
+  messagingSenderId: "1000054805371",
+  appId: "1:1000054805371:web:93f13c5f877dba7b6863de"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const table = document.getElementById("timetableTable");
+const adminPanel = document.getElementById("adminPanel");
+const searchInput = document.getElementById("searchInput");
+const emptyMessage = document.getElementById("emptyMessage");
+
+let currentUserEmail = "";
+
+// Auth
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  currentUserEmail = user.email;
+
+  if (currentUserEmail !== "kendrerushikesh1234@gmail.com") {
+    adminPanel.style.display = "none";
+  }
+
+  loadTimetable();
+});
+
+// Add Entry
+document.getElementById("addBtn").addEventListener("click", async () => {
+
+  if (currentUserEmail !== "kendrerushikesh1234@gmail.com") return;
+
+  const subject = document.getElementById("subject").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const room = document.getElementById("room").value;
+
+  if (!subject || !date || !time || !room) {
+    alert("Fill all fields");
+    return;
+  }
+
+  await addDoc(collection(db, "timetable"), {
+    subject,
+    date,
+    time,
+    room,
+    createdAt: Timestamp.now()
+  });
+
+  await addDoc(collection(db, "activityLogs"), {
+    action: "Added Exam",
+    details: subject + " - " + date,
+    adminEmail: currentUserEmail,
+    timestamp: serverTimestamp()
+  });
+
+  document.getElementById("subject").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("time").value = "";
+  document.getElementById("room").value = "";
+});
+
+// Load
+function loadTimetable() {
+
+  const q = query(collection(db, "timetable"), orderBy("date"));
+
+  onSnapshot(q, (snapshot) => {
+
+    table.innerHTML = `
+      <tr>
+        <th>Subject</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Room</th>
+        ${currentUserEmail === "kendrerushikesh1234@gmail.com" ? "<th>Action</th>" : ""}
+      </tr>
+    `;
+
+    if (snapshot.empty) {
+      emptyMessage.innerText = "No exams scheduled.";
+      return;
+    } else {
+      emptyMessage.innerText = "";
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+
+      if (searchInput.value &&
+          !data.subject.toLowerCase().includes(searchInput.value.toLowerCase()))
+        return;
+
+      const row = table.insertRow();
+
+      if (data.date === today) row.classList.add("today");
+
+      row.insertCell(0).innerText = data.subject;
+      row.insertCell(1).innerText = data.date;
+      row.insertCell(2).innerText = data.time;
+      row.insertCell(3).innerText = data.room;
+
+      if (currentUserEmail === "kendrerushikesh1234@gmail.com") {
+        row.insertCell(4).innerHTML = `
+          <button class="action-btn" onclick="editEntry('${id}', '${data.subject}', '${data.date}', '${data.time}', '${data.room}')">Edit</button>
+          <button class="action-btn" onclick="deleteEntry('${id}')">Delete</button>
+        `;
+      }
+    });
+  });
+}
+
+searchInput.addEventListener("input", loadTimetable);
+
+window.deleteEntry = async (id) => {
+  if (currentUserEmail !== "kendrerushikesh1234@gmail.com") return;
+
+  if (confirm("Delete this exam?")) {
+
+    await deleteDoc(doc(db, "timetable", id));
+
+    await addDoc(collection(db, "activityLogs"), {
+      action: "Deleted Exam",
+      details: id,
+      adminEmail: currentUserEmail,
+      timestamp: serverTimestamp()
+    });
+  }
+};
+
+window.editEntry = async (id, subject, date, time, room) => {
+
+  if (currentUserEmail !== "kendrerushikesh1234@gmail.com") return;
+
+  const newSubject = prompt("Edit Subject:", subject);
+  if (newSubject === null) return;
+
+  const newDate = prompt("Edit Date (YYYY-MM-DD):", date);
+  if (newDate === null) return;
+
+  const newTime = prompt("Edit Time:", time);
+  if (newTime === null) return;
+
+  const newRoom = prompt("Edit Room:", room);
+  if (newRoom === null) return;
+
+  await updateDoc(doc(db, "timetable", id), {
+    subject: newSubject,
+    date: newDate,
+    time: newTime,
+    room: newRoom
+  });
+
+  await addDoc(collection(db, "activityLogs"), {
+    action: "Edited Exam",
+    details: newSubject + " - " + newDate,
+    adminEmail: currentUserEmail,
+    timestamp: serverTimestamp()
+  });
+};
+
+</script>
+
+</body>
+</html>

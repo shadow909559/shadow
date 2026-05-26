@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard - Smart College Navigation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      background: #f5f7fb;
+    }
+
+    body.dark {
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+
+    .dashboard {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 230px;
+      background: white;
+      padding: 25px;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      transition: width 0.3s ease;
+    }
+
+    body.dark .sidebar {
+      background: #1e293b;
+      border-right: 1px solid #334155;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar h2 {
+      color: #2563eb;
+    }
+
+    .sidebar a {
+      text-decoration: none;
+      color: inherit;
+      padding: 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #e0e7ff;
+      color: #2563eb;
+    }
+
+    body.dark .sidebar a:hover,
+    body.dark .sidebar a.active {
+      background: #334155;
+      color: #60a5fa;
+    }
+
+    .sidebar.collapsed a,
+    .sidebar.collapsed h2 {
+      font-size: 0;
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      background: #2563eb;
+      color: white;
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    #toggleSidebar, #darkModeToggle {
+      background: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .profile {
+      background: white;
+      color: #2563eb;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    /* ===== CONTENT ===== */
+    .dashboard-container {
+      padding: 25px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 15px;
+      width: 220px;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+    }
+
+    body.dark .card {
+      background: rgba(30,41,59,0.7);
+    }
+
+    .card p {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 10px;
+      color: #2563eb;
+    }
+
+    #resultsContainer div {
+      background: rgba(255,255,255,0.7);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+    }
+
+    body.dark #resultsContainer div {
+      background: rgba(30,41,59,0.7);
+    }
+
+    .semester-section {
+      background: rgba(37,99,235,0.1);
+      border-left: 4px solid #2563eb;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+    }
+
+    .semester-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 15px;
+    }
+
+    body.dark .semester-section {
+      background: rgba(37,99,235,0.15);
+    }
+
+    .subject-result {
+      background: rgba(255,255,255,0.5);
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border-left: 3px solid #10b981;
+    }
+
+    body.dark .subject-result {
+      background: rgba(30,41,59,0.5);
+    }
+
+    .graph-box {
+      background: rgba(238,242,255,0.8);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+
+    body.dark .graph-box {
+      background: rgba(30,41,59,0.8);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+  <div class="sidebar" id="sidebar">
+    <h2>Smart College</h2>
+    <a href="index.html">Home</a>
+    <a href="map.html">College Map</a>
+    <a href="notices.html">Notices</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="exam.html">Exam Portal</a>
+  </div>
+
+  <div class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <button id="toggleSidebar">☰</button>
+        <h1>Dashboard 🎓</h1>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="darkModeToggle">🌙</button>
+        <div class="profile" id="profileLetter">U</div>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <div class="dashboard-container">
+
+      <h2>Welcome to your dashboard!</h2>
+
+      <h3 style="margin-top:20px;">Exam Overview 📊</h3>
+
+      <div class="cards">
+        <div class="card">
+          <h4>Total Exams</h4>
+          <p id="totalExams">0</p>
+        </div>
+
+        <div class="card">
+          <h4>Next Exam</h4>
+          <p id="nextExam">None</p>
+        </div>
+
+        <div class="card">
+          <h4>Days Remaining</h4>
+          <p id="countdown">-</p>
+        </div>
+      </div>
+
+      <div id="todayAlert" style="margin-top:15px; color:red;"></div>
+
+      <hr style="margin:30px 0;">
+
+      <h3>Your Results 📊</h3>
+      <div id="resultsContainer">Loading results...</div>
+
+      <h3 style="margin-top:20px;">Performance Graph 📈</h3>
+      <h3 style="margin-top:20px;">Leaderboard 🏆</h3>
+<div id="leaderboardContainer">Loading leaderboard...</div>
+      <div class="graph-box">
+        <canvas id="resultsChart"></canvas>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBzMLug_TU5BW7fxEpAND4KiyVjeWcxcrs",
+  authDomain: "college-location-app.firebaseapp.com",
+  projectId: "college-location-app"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const profileLetter = document.getElementById("profileLetter");
+
+let chartInstance = null;
+
+// ================= AUTH =================
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  const userDoc = userSnap.exists() ? userSnap.data() : null;
+
+  if (!userDoc) {
+    await signOut(auth);
+    window.location.href = "login.html";
+    return;
+  }
+
+  if (userDoc.role !== "student") {
+    await signOut(auth);
+    window.location.href = "admin.html";
+    return;
+  }
+
+  profileLetter.innerText = user.email.charAt(0).toUpperCase();
+
+  loadLeaderboard();
+
+  // ================= LOAD RESULTS =================
+  const q = query(collection(db, "results"), where("email", "==", user.email));
+  const snapshot = await getDocs(q);
+
+  const subjects = [];
+  const percentages = [];
+  const semesterMap = {};
+
+  let output = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+
+    const subject = data.subject || "Unknown Subject";
+    const semester = data.semester || "Unknown Semester";
+    const marks = data.marks ?? 0;
+
+    // Use marks directly for percentage (assuming marks out of 100 or normalize)
+    const percent = Math.round(marks);
+
+    const status = percent >= 40 ? "✅ Pass" : "❌ Fail";
+
+    const date = data.timestamp
+      ? new Date(data.timestamp.seconds * 1000).toLocaleString()
+      : "No Date";
+
+    subjects.push(subject);
+    percentages.push(percent);
+
+    // Organize by semester
+    if (!semesterMap[semester]) {
+      semesterMap[semester] = [];
+    }
+
+    semesterMap[semester].push({
+      subject,
+      marks,
+      percent,
+      status,
+      date
+    });
+  });
+
+  // Build HTML organized by semester
+  const semesters = Object.keys(semesterMap).sort();
+
+  semesters.forEach(semester => {
+    output += `
+      <div class="semester-section">
+        <div class="semester-title">📚 ${semester}</div>
+    `;
+
+    semesterMap[semester].forEach(result => {
+      output += `
+        <div class="subject-result">
+          <strong>${result.subject}</strong><br>
+          Marks: ${result.marks}/100<br>
+          Percentage: ${result.percent}%<br>
+          Status: ${result.status}<br>
+          <small>Attempted: ${result.date}</small>
+        </div>
+      `;
+    });
+
+    output += `</div>`;
+  });
+
+  document.getElementById("resultsContainer").innerHTML =
+    output || "No results found.";
+
+  if (subjects.length) createChart(subjects, percentages);
+
+  loadExamOverview();
+
+  // ===== CALCULATE STATS =====
+  let totalPercent = 0;
+  let totalCount = 0;
+  let passed = 0;
+  let failed = 0;
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const marks = data.marks ?? 0;
+    const percent = Math.round(marks);
+
+    if (percent >= 40) passed++;
+    else failed++;
+
+    totalPercent += percent;
+    totalCount++;
+  });
+
+  const avg = totalCount ? Math.round(totalPercent / totalCount) : 0;
+
+  const statsHTML = `
+    <div class="card">
+      <h4>Average %</h4>
+      <p>${avg}%</p>
+    </div>
+
+    <div class="card">
+      <h4>Passed</h4>
+      <p>${passed}</p>
+    </div>
+
+    <div class="card">
+      <h4>Failed</h4>
+      <p>${failed}</p>
+    </div>
+  `;
+
+  document.querySelector(".cards").insertAdjacentHTML("beforeend", statsHTML);
+
+  // ===== PERFORMANCE BADGE =====
+  let badge = "";
+
+  if (avg >= 80) badge = "🔥 Topper";
+  else if (avg >= 50) badge = "👍 Good";
+  else badge = "⚠ Needs Improvement";
+
+  document.querySelector(".dashboard-container").insertAdjacentHTML(
+    "beforeend",
+    `<h3 style="margin-top:20px;">Your Performance: ${badge}</h3>`
+  );
+});
+
+// ================= CHART =================
+function createChart(subjects, percentages) {
+
+  const ctx = document.getElementById("resultsChart").getContext("2d");
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: subjects,
+      datasets: [{
+        label: "Percentage",
+        data: percentages,
+        backgroundColor: "#2563eb"
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+}
+
+// ================= EXAM OVERVIEW =================
+async function loadExamOverview() {
+
+  const snapshot = await getDocs(collection(db, "timetable"));
+
+  const exams = [];
+  snapshot.forEach(doc => exams.push(doc.data()));
+
+  document.getElementById("totalExams").innerText = exams.length;
+
+  if (!exams.length) return;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  exams.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  const nextExam = exams.find(e => e.date >= today);
+
+  if (!nextExam) return;
+
+  document.getElementById("nextExam").innerText =
+    nextExam.subject + " (" + nextExam.date + ")";
+
+  const diff = Math.ceil(
+    (new Date(nextExam.date) - new Date(today)) / (1000*60*60*24)
+  );
+
+  document.getElementById("countdown").innerText = diff;
+
+  if (nextExam.date === today) {
+    document.getElementById("todayAlert").innerText =
+      "⚠️ You have an exam today: " + nextExam.subject;
+  }
+}
+
+// ================= LEADERBOARD =================
+async function loadLeaderboard(){
+
+  const snapshot = await getDocs(collection(db, "results"));
+
+  let allResults = [];
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+
+    const score = data.score ?? 0;
+    const total = data.total ?? 10;
+
+    const percent = Math.round((score / total) * 100);
+
+    allResults.push({
+      email: data.email,
+      subject: data.subject,
+      percent: percent
+    });
+  });
+
+  // SORT BY PERCENT
+  allResults.sort((a,b) => b.percent - a.percent);
+
+  // TOP 5
+  const top = allResults.slice(0,5);
+
+  let html = "";
+
+  top.forEach((item, index) => {
+    html += `
+      <div>
+        <strong>#${index+1}</strong> 
+        ${item.email}<br>
+        ${item.subject} - ${item.percent}%
+      </div>
+    `;
+  });
+
+  document.getElementById("leaderboardContainer").innerHTML =
+    html || "No data";
+}
+
+// ================= LOGOUT =================
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth).then(() => window.location.href = "login.html");
+
+});
+
+</script>
+
+</body>
+</html>

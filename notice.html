@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notices - Smart College Navigation</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .notice-container {
+      padding: 20px;
+    }
+
+    .notice {
+      background: #f2f2f2;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 8px 15px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>College Notices 📰</h1>
+  <button onclick="window.location.href='dashboard.html'">Back</button>
+</header>
+
+<div class="notice-container">
+
+  <h3>Add Notice (Admin)</h3>
+  <input type="text" id="noticeTitle" placeholder="Notice Title">
+  <textarea id="noticeContent" placeholder="Notice Content"></textarea>
+  <button id="addNoticeBtn">Add Notice</button>
+
+  <hr>
+
+  <h3>All Notices</h3>
+  <div id="noticesList"></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBzMLug_TU5BW7fxEpAND4KiyVjeWcxcrs",
+  authDomain: "college-location-app.firebaseapp.com",
+  projectId: "college-location-app",
+  storageBucket: "college-location-app.firebasestorage.app",
+  messagingSenderId: "1000054805371",
+  appId: "1:1000054805371:web:93f13c5f877dba7b6863de"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const noticesList = document.getElementById("noticesList");
+
+const q = query(collection(db, "notices"), orderBy("timestamp", "desc"));
+
+onSnapshot(q, (snapshot) => {
+  noticesList.innerHTML = "";
+  snapshot.forEach((doc) => {
+    const notice = doc.data();
+    noticesList.innerHTML += `
+      <div class="notice">
+        <h4>${notice.title}</h4>
+        <p>${notice.content}</p>
+      </div>
+    `;
+  });
+});
+
+document.getElementById("addNoticeBtn").addEventListener("click", async () => {
+  const title = document.getElementById("noticeTitle").value;
+  const content = document.getElementById("noticeContent").value;
+
+  if (title === "" || content === "") {
+    alert("Please fill all fields");
+    return;
+  }
+
+  await addDoc(collection(db, "notices"), {
+    title: title,
+    content: content,
+    timestamp: new Date()
+  });
+
+  document.getElementById("noticeTitle").value = "";
+  document.getElementById("noticeContent").value = "";
+});
+</script>
+
+</body>
+</html>
