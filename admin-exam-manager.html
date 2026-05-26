@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Exams - College Location App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 5px;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-success {
+      background: #eafce9;
+      color: #2d5016;
+      border-left: 4px solid #4caf50;
+    }
+
+    .alert-error {
+      background: #fee;
+      color: #c33;
+      border-left: 4px solid #f44336;
+    }
+
+    .form-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+    }
+
+    .form-section h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    input, textarea, select {
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #da190b;
+    }
+
+    .btn-edit {
+      background: #2196f3;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-delete {
+      background: #f44336;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .exams-list {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    .exams-list h2 {
+      padding: 1.5rem 2rem;
+      background: #f9f9f9;
+      border-bottom: 1px solid #e0e0e0;
+      margin: 0;
+    }
+
+    .exam-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .exam-table th {
+      background: #f5f5f5;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e0e0e0;
+      color: #555;
+    }
+
+    .exam-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .exam-table tr:hover {
+      background: #fafafa;
+    }
+
+    .exam-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .exam-status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .exam-status.upcoming {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .exam-status.ongoing {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .exam-status.completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .no-exams {
+      padding: 2rem;
+      text-align: center;
+      color: #999;
+    }
+
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .exam-table {
+        font-size: 0.9rem;
+      }
+
+      .exam-table th, .exam-table td {
+        padding: 0.75rem;
+      }
+
+      .exam-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>📝 Manage Exams</h1>
+      <p>Create, edit, and manage your exams</p>
+    </div>
+
+    <div id="success-alert" class="alert alert-success"></div>
+    <div id="error-alert" class="alert alert-error"></div>
+
+    <!-- Create Exam Form -->
+    <div class="form-section">
+      <h2 id="exam-form-title">Create New Exam</h2>
+      <form id="exam-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="exam-title">Exam Title *</label>
+            <input 
+              type="text" 
+              id="exam-title" 
+              placeholder="e.g., Mathematics Mid-Term"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="exam-subject">Subject *</label>
+            <input 
+              type="text" 
+              id="exam-subject" 
+              placeholder="e.g., Mathematics"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="exam-date">Exam Date & Time *</label>
+            <input 
+              type="datetime-local" 
+              id="exam-date"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="exam-duration">Duration (minutes) *</label>
+            <input 
+              type="number" 
+              id="exam-duration" 
+              placeholder="e.g., 60"
+              min="1"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="exam-marks">Total Marks *</label>
+            <input 
+              type="number" 
+              id="exam-marks" 
+              placeholder="e.g., 100"
+              min="1"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exam-description">Description</label>
+          <textarea 
+            id="exam-description" 
+            placeholder="Add exam instructions and details..."
+          ></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary" id="exam-submit-btn">Create Exam</button>
+          <button type="reset" class="btn btn-secondary">Clear Form</button>
+          <button type="button" class="btn btn-secondary" id="cancel-edit-btn" style="display: none;">Cancel Edit</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Exams List -->
+    <div class="exams-list">
+      <h2>📚 Your Exams</h2>
+      
+      <div id="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading exams...</p>
+      </div>
+
+      <table class="exam-table" id="exams-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>Exam Title</th>
+            <th>Subject</th>
+            <th>Date & Time</th>
+            <th>Duration</th>
+            <th>Marks</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="exams-tbody">
+        </tbody>
+      </table>
+
+      <div id="no-exams" class="no-exams">
+        You haven't created any exams yet. Create one to get started!
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initAuthGuard, verifyAdminAccess } from './auth-guard.js';
+    import { 
+      createExamDoc, 
+      getExamsByAdmin, 
+      deleteExamDoc,
+      updateExamDoc
+    } from './config/firestore-schema.js';
+    import { getCurrentUserId } from './utils/auth-helper.js';
+    import { broadcastExamNotification, broadcastExamUpdateNotification } from './utils/email-service.js';
+
+    let currentExams = [];
+    let editingExamId = null;
+
+    async function initPage() {
+      const hasAccess = await initAuthGuard();
+      if (!hasAccess) return;
+
+      await verifyAdminAccess();
+      await loadExams();
+      setupEventListeners();
+    }
+
+    async function loadExams() {
+      const userId = getCurrentUserId();
+      const loading = document.getElementById('loading');
+      const table = document.getElementById('exams-table');
+      const tbody = document.getElementById('exams-tbody');
+      const noExams = document.getElementById('no-exams');
+
+      loading.style.display = 'block';
+      table.style.display = 'none';
+      noExams.style.display = 'none';
+
+      try {
+        const exams = await getExamsByAdmin(userId);
+        currentExams = exams;
+
+        if (exams.length === 0) {
+          loading.style.display = 'none';
+          noExams.style.display = 'block';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        exams.forEach(exam => {
+          const row = createExamRow(exam);
+          tbody.appendChild(row);
+        });
+
+        loading.style.display = 'none';
+        table.style.display = 'table';
+
+      } catch (error) {
+        console.error('Error loading exams:', error);
+        showError('Failed to load exams');
+      }
+    }
+
+    function createExamRow(exam) {
+      const row = document.createElement('tr');
+      const examDate = new Date(exam.date.seconds ? exam.date.seconds * 1000 : exam.date);
+      const now = new Date();
+      
+      let status = 'upcoming';
+      if (examDate < now) status = 'completed';
+
+      const statusLabel = status === 'completed' ? 'Completed' : 'Upcoming';
+      const statusClass = status === 'completed' ? 'completed' : 'upcoming';
+
+      row.innerHTML = `
+        <td>${escapeHtml(exam.title)}</td>
+        <td>${escapeHtml(exam.subject)}</td>
+        <td>${examDate.toLocaleDateString()} ${examDate.toLocaleTimeString()}</td>
+        <td>${exam.duration} min</td>
+        <td>${exam.totalMarks}</td>
+        <td><span class="exam-status ${statusClass}">${statusLabel}</span></td>
+        <td>
+          <div class="exam-actions">
+            <button class="btn btn-edit" onclick="editExam('${exam.id}')">Edit</button>
+            <button class="btn btn-delete" onclick="deleteExam('${exam.id}')">Delete</button>
+          </div>
+        </td>
+      `;
+
+      return row;
+    }
+
+    function setupEventListeners() {
+      const form = document.getElementById('exam-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveExam();
+      });
+
+      form.addEventListener('reset', () => {
+        setCreateMode();
+      });
+
+      document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+        form.reset();
+        setCreateMode();
+      });
+    }
+
+    function getExamFormData() {
+      const userId = getCurrentUserId();
+
+      return {
+        title: document.getElementById('exam-title').value.trim(),
+        subject: document.getElementById('exam-subject').value.trim(),
+        date: new Date(document.getElementById('exam-date').value),
+        duration: parseInt(document.getElementById('exam-duration').value),
+        totalMarks: parseInt(document.getElementById('exam-marks').value),
+        description: document.getElementById('exam-description').value.trim(),
+        createdBy: userId
+      };
+    }
+
+    async function saveExam() {
+      const examData = getExamFormData();
+      if (
+        !examData.title ||
+        !examData.subject ||
+        Number.isNaN(examData.date.getTime()) ||
+        !Number.isFinite(examData.duration) ||
+        examData.duration < 1 ||
+        !Number.isFinite(examData.totalMarks) ||
+        examData.totalMarks < 1
+      ) {
+        showError('Please fill all required exam fields correctly.');
+        return;
+      }
+
+      try {
+        if (editingExamId) {
+          const success = await updateExamDoc(editingExamId, examData);
+          if (!success) {
+            showError('Failed to update exam. Please try again.');
+            return;
+          }
+
+          await broadcastExamUpdateNotification(
+            examData.title,
+            examData.date,
+            editingExamId,
+            `Question paper "${examData.title}" was edited by the admin. Please review the updated details.`
+          );
+
+          showSuccess('Exam updated and student emails notified!');
+          document.getElementById('exam-form').reset();
+          setCreateMode();
+          await loadExams();
+          return;
+        }
+
+        const examId = await createExamDoc(examData);
+        if (examId) {
+          await broadcastExamNotification(examData.title, examData.date, examId);
+          showSuccess('Exam created and student emails notified!');
+          document.getElementById('exam-form').reset();
+          setCreateMode();
+          await loadExams();
+        } else {
+          showError('Failed to create exam. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error saving exam:', error);
+        showError('Failed to save exam. Please try again.');
+      }
+    }
+
+    window.deleteExam = async function(examId) {
+      if (!confirm('Are you sure you want to delete this exam?')) return;
+
+      try {
+        const success = await deleteExamDoc(examId);
+        if (success) {
+          showSuccess('Exam deleted successfully');
+          await loadExams();
+        }
+      } catch (error) {
+        console.error('Error deleting exam:', error);
+        showError('Failed to delete exam');
+      }
+    };
+
+    window.editExam = function(examId) {
+      const exam = currentExams.find(e => e.id === examId);
+      if (!exam) return;
+
+      const examDate = new Date(exam.date.seconds ? exam.date.seconds * 1000 : exam.date);
+      const dateString = toDateTimeLocalValue(examDate);
+
+      document.getElementById('exam-title').value = exam.title;
+      document.getElementById('exam-subject').value = exam.subject;
+      document.getElementById('exam-date').value = dateString;
+      document.getElementById('exam-duration').value = exam.duration;
+      document.getElementById('exam-marks').value = exam.totalMarks;
+      document.getElementById('exam-description').value = exam.description || '';
+      editingExamId = examId;
+      document.getElementById('exam-form-title').textContent = 'Edit Exam';
+      document.getElementById('exam-submit-btn').textContent = 'Update Exam & Notify Students';
+      document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+
+      window.scrollTo(0, 0);
+    };
+
+    function setCreateMode() {
+      editingExamId = null;
+      document.getElementById('exam-form-title').textContent = 'Create New Exam';
+      document.getElementById('exam-submit-btn').textContent = 'Create Exam';
+      document.getElementById('cancel-edit-btn').style.display = 'none';
+    }
+
+    function toDateTimeLocalValue(date) {
+      const timezoneOffset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showSuccess(message) {
+      const alert = document.getElementById('success-alert');
+      alert.textContent = message;
+      alert.classList.add('show');
+      setTimeout(() => alert.classList.remove('show'), 4000);
+    }
+
+    function showError(message) {
+      const alert = document.getElementById('error-alert');
+      alert.textContent = message;
+      alert.classList.add('show');
+      setTimeout(() => alert.classList.remove('show'), 4000);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

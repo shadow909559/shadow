@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - College Location App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .dashboard-wrapper {
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .welcome-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      animation: slideDown 0.5s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .welcome-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .welcome-header h1 {
+      font-size: 2rem;
+      color: #333;
+    }
+
+    .logout-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+    }
+
+    .student-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-label {
+      font-weight: 600;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      border-top: 4px solid #667eea;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #667eea;
+      margin: 0.5rem 0;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .action-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .action-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .action-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    .action-card p {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .upcoming-exams {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .upcoming-exams h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    .exam-preview {
+      background: #f9f9f9;
+      padding: 1rem;
+      border-left: 4px solid #667eea;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+    }
+
+    .exam-preview h4 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .exam-preview p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0.25rem 0;
+    }
+
+    .no-exams {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .welcome-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .welcome-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .logout-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <div class="container">
+      <!-- Welcome Section -->
+      <div class="welcome-card">
+        <div class="welcome-header">
+          <div>
+            <h1>👋 Welcome, <span id="student-name">Student</span>!</h1>
+            <p id="welcome-message" style="color: #666; margin-top: 0.5rem;">Ready to explore your exams?</p>
+          </div>
+          <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <!-- Student Info -->
+        <div class="student-info" id="student-info" style="display: none;">
+          <div class="info-item">
+            <span class="info-label">Email:</span>
+            <span id="student-email">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Student ID:</span>
+            <span id="student-id">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Last Login:</span>
+            <span id="last-login">Just now</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Available Exams</div>
+          <div class="stat-number" id="available-exams">0</div>
+          <p style="color: #999; font-size: 0.85rem;">Ready to take</p>
+        </div>
+        <div class="stat-card" style="border-top-color: #f093fb;">
+          <div class="stat-label">Questions Reviewed</div>
+          <div class="stat-number" id="questions-reviewed">0</div>
+          <p style="color: #999; font-size: 0.85rem;">This month</p>
+        </div>
+        <div class="stat-card" style="border-top-color: #4facfe;">
+          <div class="stat-label">Upcoming Exams</div>
+          <div class="stat-number" id="upcoming-count">0</div>
+          <p style="color: #999; font-size: 0.85rem;">In next 7 days</p>
+        </div>
+      </div>
+
+      <!-- Action Cards -->
+      <div class="action-grid">
+        <div class="action-card" onclick="window.location.href='/student-exams.html'">
+          <div class="action-icon">📚</div>
+          <h3>View Exams</h3>
+          <p>Browse all available exams and view questions</p>
+          <button class="btn" style="width: 100%;">Go to Exams</button>
+        </div>
+
+        <div class="action-card" onclick="window.location.href='/student-exams.html#upcoming'">
+          <div class="action-icon">📅</div>
+          <h3>Upcoming Exams</h3>
+          <p>See exams scheduled for you</p>
+          <button class="btn" style="width: 100%;">View Schedule</button>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon">❓</div>
+          <h3>Practice Questions</h3>
+          <p>Review sample questions</p>
+          <button class="btn" style="width: 100%;" onclick="alert('Practice mode coming soon!')">Start Practice</button>
+        </div>
+      </div>
+
+      <!-- Upcoming Exams Preview -->
+      <div class="upcoming-exams">
+        <h2>📋 Your Upcoming Exams</h2>
+        <div id="exams-container">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading exams...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initAuthGuard, verifyStudentAccess } from './auth-guard.js';
+    import { getCurrentUserId, getCurrentUserEmail, signOutUser } from './utils/auth-helper.js';
+    import { getAllExams } from './config/firestore-schema.js';
+
+    async function initDashboard() {
+      const hasAccess = await initAuthGuard();
+      if (!hasAccess) return;
+
+      await verifyStudentAccess();
+      
+      const userId = getCurrentUserId();
+      const email = getCurrentUserEmail();
+
+      // Update student info
+      document.getElementById('student-name').textContent = localStorage.getItem('userName') || 'Student';
+      document.getElementById('student-email').textContent = email;
+      document.getElementById('student-id').textContent = userId.substring(0, 8).toUpperCase();
+      document.getElementById('student-info').style.display = 'block';
+
+      // Load exams
+      await loadExams();
+    }
+
+    async function loadExams() {
+      try {
+        const exams = await getAllExams();
+        const now = new Date();
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const upcomingExams = exams.filter(exam => {
+          const examDate = new Date(exam.date.seconds ? exam.date.seconds * 1000 : exam.date);
+          return examDate > now;
+        }).slice(0, 3);
+
+        document.getElementById('available-exams').textContent = exams.length;
+        document.getElementById('upcoming-count').textContent = exams.filter(exam => {
+          const examDate = new Date(exam.date.seconds ? exam.date.seconds * 1000 : exam.date);
+          return examDate > now && examDate < nextWeek;
+        }).length;
+
+        // Display exams
+        const container = document.getElementById('exams-container');
+        if (upcomingExams.length === 0) {
+          container.innerHTML = '<div class="no-exams">No upcoming exams. Check back soon!</div>';
+          return;
+        }
+
+        container.innerHTML = upcomingExams.map(exam => {
+          const examDate = new Date(exam.date.seconds ? exam.date.seconds * 1000 : exam.date);
+          return `
+            <div class="exam-preview">
+              <h4>${exam.title}</h4>
+              <p>📚 Subject: ${exam.subject}</p>
+              <p>📅 Date: ${examDate.toLocaleDateString()} at ${examDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <p>⏱️ Duration: ${exam.duration} minutes | 📊 Marks: ${exam.totalMarks}</p>
+              <a href="/exam-viewer.html?id=${exam.id}" style="color: #667eea; text-decoration: none; font-weight: 600;">View Questions →</a>
+            </div>
+          `;
+        }).join('');
+
+      } catch (error) {
+        console.error('Error loading exams:', error);
+        document.getElementById('exams-container').innerHTML = '<div class="no-exams">Error loading exams. Please refresh the page.</div>';
+      }
+    }
+
+    window.logout = async function() {
+      if (confirm('Are you sure you want to logout?')) {
+        await signOutUser();
+        window.location.href = '/student-login.html';
+      }
+    };
+
+    initDashboard();
+  </script>
+</body>
+</html>

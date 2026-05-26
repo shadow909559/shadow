@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Portal</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #1f2937;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(920px, 100%);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .intro {
+      grid-column: 1 / -1;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .intro h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      margin-bottom: 10px;
+      color: #111827;
+    }
+
+    .intro p {
+      color: #4b5563;
+      font-size: 1.05rem;
+    }
+
+    .portal-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 28px;
+      box-shadow: 0 12px 32px rgba(31, 41, 55, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .portal-card h2 {
+      font-size: 1.4rem;
+      color: #111827;
+    }
+
+    .portal-card p {
+      color: #6b7280;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .portal-card a {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 46px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 700;
+      color: #ffffff;
+      background: #4f46e5;
+    }
+
+    .portal-card.student a {
+      background: #0284c7;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="intro">
+      <h1>College Exam Portal</h1>
+      <p>Use the correct login for your role. Admin and student access are separate.</p>
+    </section>
+
+    <section class="portal-card admin">
+      <h2>Admin Login</h2>
+      <p>Create exams, build question papers, edit papers, and send student-only email notifications.</p>
+      <a href="/admin-login.html">Open Admin Portal</a>
+    </section>
+
+    <section class="portal-card student">
+      <h2>Student Login</h2>
+      <p>View available exams, check updated papers, and review question paper details from your student account.</p>
+      <a href="/student-login.html">Open Student Portal</a>
+    </section>
+  </main>
+</body>
+</html>

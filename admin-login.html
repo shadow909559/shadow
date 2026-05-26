@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - College Location App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+
+    .login-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .login-header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .login-form {
+      padding: 2rem 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: 0.25rem;
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .error-message {
+      display: none;
+      background: #fee;
+      color: #c33;
+      padding: 0.75rem;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .login-footer {
+      background: #f9f9f9;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .login-footer p {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .login-footer a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .loading-spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .role-badge {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>🔐 Admin Login</h1>
+      <p>College Location App</p>
+    </div>
+
+    <div class="login-form">
+      <div id="error-message" class="error-message"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            placeholder="admin@college.com"
+            required
+            autocomplete="email"
+          >
+          <small>Enter your admin email address</small>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            placeholder="Enter your password"
+            required
+            autocomplete="current-password"
+          >
+          <small>Enter your secure password</small>
+        </div>
+
+        <button type="submit" class="login-btn" id="login-btn">
+          <span class="loading-spinner" id="loading-spinner"></span>
+          <span id="btn-text">Login as Admin</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="login-footer">
+      <p>Not an admin? <a href="/student-login.html">Student Login</a></p>
+      <p><a href="/">Back to Home</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+    import { auth, getUserDoc } from './config/firestore-schema.js';
+    import { cacheUser, clearCachedUser } from './utils/auth-helper.js';
+
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('login-btn');
+    const errorMessage = document.getElementById('error-message');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const btnText = document.getElementById('btn-text');
+
+    // Show error message
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add('show');
+      setTimeout(() => {
+        errorMessage.classList.remove('show');
+      }, 5000);
+    }
+
+    // Show loading state
+    function showLoading() {
+      loginBtn.disabled = true;
+      loadingSpinner.style.display = 'block';
+      btnText.textContent = 'Logging in...';
+    }
+
+    // Hide loading state
+    function hideLoading() {
+      loginBtn.disabled = false;
+      loadingSpinner.style.display = 'none';
+      btnText.textContent = 'Login as Admin';
+    }
+
+    // Handle login form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!email || !password) {
+        showError('Please fill in all fields');
+        return;
+      }
+
+      showLoading();
+
+      try {
+        // Sign in with Firebase
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Check if user is admin
+        const userDoc = await getUserDoc(user.uid);
+        
+        if (!userDoc) {
+          showError('User profile not found. Please contact support.');
+          await auth.signOut();
+          clearCachedUser();
+          hideLoading();
+          return;
+        }
+
+        if (userDoc.role !== 'admin') {
+          showError('This login is for admins only. Please use student login.');
+          await auth.signOut();
+          clearCachedUser();
+          hideLoading();
+          return;
+        }
+
+        cacheUser(user, userDoc);
+
+        // Redirect to admin dashboard
+        window.location.href = '/admin-dashboard.html';
+
+      } catch (error) {
+        console.error('Login error:', error);
+        
+        let errorMsg = 'Login failed. Please try again.';
+        if (error.code === 'auth/user-not-found') {
+          errorMsg = 'Email address not found.';
+        } else if (error.code === 'auth/wrong-password') {
+          errorMsg = 'Incorrect password.';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMsg = 'Invalid email address.';
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMsg = 'Too many failed login attempts. Please try again later.';
+        }
+        
+        showError(errorMsg);
+        hideLoading();
+      }
+    });
+
+    // Clear error message on input
+    emailInput.addEventListener('focus', () => {
+      errorMessage.classList.remove('show');
+    });
+    passwordInput.addEventListener('focus', () => {
+      errorMessage.classList.remove('show');
+    });
+  </script>
+</body>
+</html>

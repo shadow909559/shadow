@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>College Map - Smart College Navigation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      background: #f4f8ff;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      height: 100vh;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      padding: 25px 20px;
+      position: fixed;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      color: #1a73e8;
+      margin-bottom: 40px;
+    }
+
+    .sidebar a {
+      display: block;
+      text-decoration: none;
+      color: #333;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    /* Main */
+    .main {
+      margin-left: 240px;
+      width: 100%;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: #1a73e8;
+      color: white;
+      padding: 18px 30px;
+      font-size: 18px;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Content */
+    .content {
+      padding: 40px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      transition: 0.3s ease;
+      margin-bottom: 30px;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 30px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      color: #1a73e8;
+      margin-bottom: 15px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 500px;
+      border-radius: 14px;
+      border: none;
+      margin-top: 20px;
+    }
+
+    .info-box {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e8f0fe;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    /* Interior Map Styles */
+    .interior-map {
+      width: 100%;
+      height: 600px;
+      background: linear-gradient(135deg, #e8f0fe 0%, #f0f7ff 100%);
+      border-radius: 14px;
+      border: 2px solid #1a73e8;
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+    }
+
+    .building {
+      position: absolute;
+      padding: 15px;
+      background: white;
+      border: 2px solid #1a73e8;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+      text-align: center;
+      min-width: 110px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      transform-style: preserve-3d;
+      background: linear-gradient(145deg, #ffffff 0%, #f5f8fd 100%);
+    }
+
+    .building:hover {
+      background: #1a73e8;
+      color: white;
+      transform: scale(1.1) rotateY(-15deg) rotateX(5deg);
+      box-shadow: 15px 15px 30px rgba(26,115,232,0.5), -5px -5px 15px rgba(0,0,0,0.2);
+    }
+
+    .building-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .building-emoji {
+      font-size: 40px;
+      margin: 8px 0;
+      display: block;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      transition: 0.3s ease;
+    }
+
+    .building:hover .building-emoji {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.5));
+    }
+
+    .building-desc {
+      font-size: 11px;
+      color: #666;
+      margin-top: 3px;
+      font-style: italic;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #1a73e8;
+      padding-bottom: 15px;
+    }
+
+    .modal-header h2 {
+      color: #1a73e8;
+      margin: 0;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #1a73e8;
+    }
+
+    .modal-section {
+      margin: 20px 0;
+    }
+
+    .modal-section h4 {
+      color: #1a73e8;
+      margin-bottom: 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .modal-section p {
+      color: #333;
+      line-height: 1.6;
+      margin: 5px 0;
+    }
+
+    .subjects-list, .timetable-list, .notices-list {
+      background: #f9fbff;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 8px 0;
+    }
+
+    .subject-item, .timetable-item, .notice-item {
+      padding: 8px;
+      background: white;
+      margin: 5px 0;
+      border-left: 3px solid #1a73e8;
+      padding-left: 12px;
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      color: #666;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: 0.3s;
+    }
+
+    .tab-btn.active {
+      color: #1a73e8;
+      border-bottom-color: #1a73e8;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    /* Category Filter Buttons */
+    .category-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 2px solid #1a73e8;
+      color: #1a73e8;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .filter-btn.active {
+      background: #1a73e8;
+      color: white;
+    }
+
+    .filter-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26,115,232,0.3);
+    }
+
+    /* Facility Cards for Hostels & Canteen */
+    .facilities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .facility-card {
+      background: white;
+      padding: 25px;
+      border-radius: 14px;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .facility-card:hover {
+      transform: translateY(-4px);
+      border-color: #1a73e8;
+      box-shadow: 0 6px 20px rgba(26,115,232,0.2);
+    }
+
+    .facility-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .facility-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a73e8;
+      margin-bottom: 8px;
+    }
+
+    .facility-info {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    /* Menu Items in Canteen Modal */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .menu-item {
+      background: #f9fbff;
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 4px solid #1a73e8;
+    }
+
+    .menu-item-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .menu-item-price {
+      color: #1a73e8;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    /* Department Badge */
+    .department-badge {
+      display: inline-block;
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .year-badge {
+      display: inline-block;
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+      margin-bottom: 10px;
+    }
+
+    /* Hostel Details */
+    .hostel-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .detail-box {
+      background: #f9fbff;
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 4px solid #1a73e8;
+    }
+
+    .detail-box h5 {
+      color: #1a73e8;
+      margin-bottom: 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .detail-box p {
+      color: #333;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+
+    .detail-box .small {
+      font-size: 13px;
+      color: #666;
+    }
+
+    /* 3D Canvas */
+    #canvas3d {
+      width: 100%;
+      height: 600px;
+      display: none;
+      border-radius: 14px;
+      border: 2px solid #1a73e8;
+      margin-top: 20px;
+    }
+
+    #canvas3d.active {
+      display: block;
+    }
+
+    /* View Toggle */
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .view-btn {
+      padding: 10px 20px;
+      border: 2px solid #1a73e8;
+      background: white;
+      color: #1a73e8;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .view-btn.active {
+      background: #1a73e8;
+      color: white;
+    }
+
+    .view-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26,115,232,0.3);
+    }
+
+    /* Search Bar */
+    .search-container {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #ddd;
+      border-top: none;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .search-results.active {
+      display: block;
+    }
+
+    .search-result-item {
+      padding: 12px 15px;
+      cursor: pointer;
+      transition: 0.2s;
+      border-bottom: 1px solid #eee;
+    }
+
+    .search-result-item:hover {
+      background: #f0f7ff;
+      padding-left: 20px;
+    }
+
+    /* Filters */
+    .filters-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .filter-chip {
+      padding: 8px 14px;
+      background: #f0f7ff;
+      border: 2px solid #ddd;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .filter-chip.active {
+      background: #1a73e8;
+      color: white;
+      border-color: #1a73e8;
+    }
+
+    .filter-chip:hover {
+      border-color: #1a73e8;
+    }
+
+    /* Favorites */
+    .favorite-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #ddd;
+    }
+
+    .favorite-btn.active {
+      color: #ff6b6b;
+    }
+
+    .favorite-btn:hover {
+      transform: scale(1.2);
+    }
+
+    /* Rating System */
+    .rating-container {
+      display: flex;
+      gap: 5px;
+      margin: 10px 0;
+    }
+
+    .star {
+      font-size: 20px;
+      cursor: pointer;
+      color: #ddd;
+      transition: 0.2s;
+    }
+
+    .star:hover,
+    .star.active {
+      color: #ffc107;
+      transform: scale(1.1);
+    }
+
+    /* Reviews */
+    .review-item {
+      background: #f9fbff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border-left: 4px solid #1a73e8;
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .review-author {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .review-date {
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* Quick Access */
+    .quick-access {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .quick-access-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .quick-access-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+    }
+
+    .quick-access-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .quick-access-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Notifications */
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff6b6b;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .notification-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+      max-width: 300px;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Route Info */
+    .route-info {
+      background: #e8f0fe;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #1a73e8;
+    }
+
+    .route-step {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .route-icon {
+      width: 30px;
+      height: 30px;
+      background: #1a73e8;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-weight: 600;
+    }
+
+    /* Statistics */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    /* Chat Bubble */
+    .chat-bubble {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: #1a73e8;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(26,115,232,0.4);
+      z-index: 500;
+      transition: all 0.3s ease;
+    }
+
+    .chat-bubble:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(26,115,232,0.6);
+    }
+
+    /* Tabs */
+    .tab-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      color: #1a73e8;
+      border-bottom-color: #1a73e8;
+    }
+
+    .tab-btn:hover {
+      color: #1a73e8;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background: #1e1e1e;
+    }
+
+    body.dark-mode .card,
+    body.dark-mode .modal-content,
+    body.dark-mode .sidebar,
+    body.dark-mode .building {
+      background: #2d2d2d;
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .sidebar a,
+    body.dark-mode .building-name {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode h3,
+    body.dark-mode h4,
+    body.dark-mode .modal-header h2 {
+      color: #64b5f6;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(26,115,232,0.3);
+      border-radius: 50%;
+      border-top-color: #1a73e8;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Floating Action Button */
+    .fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(102,126,234,0.4);
+      z-index: 400;
+      transition: all 0.3s ease;
+    }
+
+    .fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 30px rgba(102,126,234,0.6);
+    }
+
+    /* Breadcrumbs */
+    .breadcrumb {
+      display: flex;
+      gap: 8px;
+      font-size: 14px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumb-item {
+      color: #666;
+    }
+
+    .breadcrumb-item.active {
+      color: #1a73e8;
+      font-weight: 600;
+    }
+
+    .breadcrumb-separator {
+      color: #ccc;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #1a73e8;
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge.success {
+      background: #4caf50;
+    }
+
+    .badge.warning {
+      background: #ff9800;
+    }
+
+    .badge.danger {
+      background: #f44336;
+    }
+
+    /* Collapse */
+    .collapse {
+      margin-bottom: 15px;
+    }
+
+    .collapse-header {
+      padding: 12px 15px;
+      background: #f0f7ff;
+      cursor: pointer;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: #1a73e8;
+      transition: 0.3s;
+    }
+
+    .collapse-header:hover {
+      background: #e8f0fe;
+    }
+
+    .collapse-content {
+      display: none;
+      padding: 15px;
+      background: white;
+      border: 1px solid #f0f7ff;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .collapse.active .collapse-content {
+      display: block;
+    }
+
+    .collapse.active .collapse-header {
+      border-radius: 8px 8px 0 0;
+    }
+
+<a href="dashboard.html">Dashboard</a>
+  <a href="#campus" onclick="showSection('campus')" class="active">Campus Map</a>
+  <a href="#interior" onclick="showSection('interior')">Interior Map</a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    College Campus Map 🗺
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Campus Map Section -->
+    <div id="campus" class="section active">
+      <div class="card">
+        <h3>AG Patil Institute of Technology - Solapur</h3>
+
+        <div class="info-box">
+          📍 View real-time location of the campus below.  
+          You can zoom, switch to satellite view, and get directions directly from Google Maps.
+        </div>
+
+        <iframe 
+          src="https://www.google.com/maps?q=AG+Patil+Institute+of+Technology+Solapur&output=embed">
+        </iframe>
+
+      </div>
+    </div>
+
+    <!-- Interior Map Section -->
+    <div id="interior" class="section">
+      <div class="card">
+        <h3>College Campus Facilities 🏢</h3>
+
+        <div class="info-box">
+          🏢 Select a category below to explore buildings, hostels, and canteen facilities.
+        </div>
+
+        <!-- Category Filter Buttons -->
+        <div class="category-filters">
+          <button class="filter-btn active" onclick="filterCategory('buildings')">Buildings 🏛️</button>
+          <button class="filter-btn" onclick="filterCategory('hostels')">Hostels 🛏️</button>
+          <button class="filter-btn" onclick="filterCategory('canteen')">Canteen 🍽️</button>
+        </div>
+
+        <!-- Buildings Display -->
+        <div id="buildingsSection" class="category-content active">
+          <div class="interior-map" id="interiorMap"></div>
+        </div>
+
+        <!-- Hostels Display -->
+        <div id="hostelsSection" class="category-content" style="display: none;">
+          <div class="facilities-grid" id="hostelsGrid"></div>
+        </div>
+
+        <!-- Canteen Display -->
+        <div id="canteenSection" class="category-content" style="display: none;">
+          <div class="facilities-grid" id="canteenGrid"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Building Detail Modal -->
+<div id="buildingModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h2 id="buildingTitle">Building Details</h2>
+        <div id="buildingBadges" style="margin-top: 10px;"></div>
+      </div>
+      <button class="close-btn" onclick="closeBuildingModal()">×</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+      <button class="tab-btn" onclick="switchTab('subjects')">Subjects</button>
+      <button class="tab-btn" onclick="switchTab('timetable')">Timetable</button>
+      <button class="tab-btn" onclick="switchTab('notices')">Notices</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content active">
+      <div class="modal-section">
+        <h4>Department & Year</h4>
+        <p id="courseInfo">Loading...</p>
+      </div>
+      <div class="modal-section">
+        <h4>Faculty</h4>
+        <p id="facultyInfo">Loading...</p>
+      </div>
+      <div class="modal-section">
+        <h4>Room/Block</h4>
+        <p id="roomInfo">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Subjects Tab -->
+    <div id="subjects" class="tab-content">
+      <div id="subjectsList" class="loading">Loading subjects...</div>
+    </div>
+
+    <!-- Timetable Tab -->
+    <div id="timetable" class="tab-content">
+      <div id="timetableList" class="loading">Loading timetable...</div>
+    </div>
+
+    <!-- Notices Tab -->
+    <div id="notices" class="tab-content">
+      <div id="noticesList" class="loading">Loading notices...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hostel Detail Modal -->
+<div id="hostelModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="hostelTitle">Hostel Details</h2>
+      <button class="close-btn" onclick="closeHostelModal()">×</button>
+    </div>
+
+    <div class="modal-section">
+      <h4>Location</h4>
+      <p id="hostelLocation">Loading...</p>
+    </div>
+
+    <div class="hostel-details">
+      <div class="detail-box">
+        <h5>Total Rooms</h5>
+        <p id="totalRooms">0</p>
+      </div>
+      <div class="detail-box">
+        <h5>Students Per Room</h5>
+        <p id="studentsPerRoom">0</p>
+      </div>
+    </div>
+
+    <div class="modal-section" style="margin-top: 20px;">
+      <h4>Facilities & Amenities</h4>
+      <div id="amenitiesList" class="subjects-list">Loading...</div>
+    </div>
+
+    <div class="modal-section" style="margin-top: 20px;">
+      <h4>Rules & Regulations</h4>
+      <div id="rulesList" class="subjects-list">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Canteen Detail Modal -->
+<div id="canteenModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="canteenTitle">Canteen Menu</h2>
+      <button class="close-btn" onclick="closeCanteenModal()">×</button>
+    </div>
+
+    <div class="modal-section">
+      <h4>Location & Hours</h4>
+      <p id="canteenHours">Loading...</p>
+    </div>
+
+    <div class="modal-section">
+      <h4>Menu Items</h4>
+      <div id="menuList" class="menu-grid">Loading...</div>
+    </div>
+
+    <div class="modal-section" style="margin-top: 20px;">
+      <h4>Special Offers</h4>
+      <div id="offersList" class="subjects-list">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBzMLug_TU5BW7fxEpAND4KiyVjeWcxcrs",
+  authDomain: "college-location-app.firebaseapp.com",
+  projectId: "college-location-app"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Real Campus Layout - 9 Buildings
+const demoBuildings = {
+  // 1. MAIN BUILDING - First to enter
+  'MAIN': {
+    id: 'MAIN',
+    name: 'Main Building',
+    emoji: '🏛️',
+    description: 'First Building to Enter',
+    location: 'First entrance of campus',
+    floors: [
+      {
+        floor: 'Ground & Multiple Floors',
+        sections: [
+          'Computer Science - 1st Year',
+          'Civil Engineering - 1st Year',
+          'Mechanical Engineering - 1st Year',
+          'Electronics & Communication - 1st Year',
+          'Admission Office',
+          'Academic Administration'
+        ]
+      },
+      {
+        floor: 'Mechanical Department',
+        sections: [
+          'Mechanical Engineering - 2nd Year',
+          'Mechanical Engineering - 3rd Year',
+          'Mechanical Engineering - 4th Year (Final)',
+          'HOD Cabin (Mechanical)'
+        ]
+      }
+    ],
+    amenities: ['Admission Desk', 'Admin Offices', 'HOD Cabins', 'Classrooms'],
+    facilities: 'Central administrative hub with 1st year classes and higher-year mechanical classes',
+    notices: [
+      'Admission portal is live',
+      'Fee payment deadline: 31st May 2026',
+      'Academic calendar updated',
+      'All office hours: 9 AM - 5 PM'
+    ]
+  },
+
+  // 2. CS/ENTC/LABS BUILDING - Left of Main Building
+  'CS_ENTC': {
+    id: 'CS_ENTC',
+    name: 'CS & ENTC Building',
+    emoji: '💻',
+    description: 'Multi-Floor Academic Building',
+    location: 'Left of Main Building',
+    floors: [
+      {
+        floor: 'Ground Floor',
+        sections: ['Chemistry Laboratory'],
+        capacity: 'Shared lab facility'
+      },
+      {
+        floor: '1st Floor',
+        sections: [
+          'Electronics & Communication - 2nd Year',
+          'Electronics & Communication - 3rd Year',
+          'Electronics & Communication - 4th Year (Final)',
+          'ENTC HOD Cabin'
+        ]
+      },
+      {
+        floor: '2nd Floor',
+        sections: [
+          'Computer Science - 2nd Year',
+          'Computer Science - 3rd Year',
+          'CS HOD Cabin'
+        ]
+      },
+      {
+        floor: '3rd Floor',
+        sections: [
+          'Computer Science - 4th Year (Final)',
+          '100 PC Lab',
+          'Yoga Room'
+        ]
+      }
+    ],
+    amenities: ['Chemistry Lab', '100 PC Lab', 'Yoga Room', 'HOD Cabins'],
+    facilities: 'Main academic building with labs and specialized facilities',
+    notices: [
+      'Labs are operational 8 AM - 6 PM',
+      'Yoga sessions: Mon-Fri 6 AM - 7 AM',
+      '100 PC Lab booking required in advance',
+      'Chemistry practical sessions scheduled'
+    ]
+  },
+
+  // 3. CIVIL ENGINEERING BUILDING - First floor of Workshop Building
+  'CIVIL': {
+    id: 'CIVIL',
+    name: 'Civil Engineering Building',
+    emoji: '🏗️',
+    description: 'Civil Department',
+    location: 'First Floor (Workshop has Ground Floor)',
+    floors: [
+      {
+        floor: '1st Floor',
+        sections: [
+          'Civil Engineering - 2nd Year',
+          'Civil Engineering - 3rd Year',
+          'Civil Engineering - 4th Year (Final)',
+          'Civil HOD Cabin'
+        ]
+      }
+    ],
+    amenities: ['Civil Lab', 'HOD Cabin', 'Classrooms', 'Drawing Boards'],
+    facilities: 'Civil engineering classes and practical labs',
+    notices: [
+      'Site visit planning in progress',
+      'Lab sessions: Daily 2 PM - 5 PM',
+      'Project submissions on track',
+      'Guest lecture scheduled'
+    ]
+  },
+
+  // 4. WORKSHOP - Ground Floor (Workshop Building)
+  'WORKSHOP': {
+    id: 'WORKSHOP',
+    name: 'Workshop',
+    emoji: '🔧',
+    description: 'Practical Training Facility',
+    location: 'Ground Floor (Civil on 1st Floor)',
+    sections: [
+      'Mechanical Workshop',
+      'Metal & Wood Working',
+      'Welding Section',
+      'Tool Room',
+      'CNC & Turning Machines'
+    ],
+    amenities: ['Workbenches', 'Heavy Machinery', 'Safety Equipment', 'Tool Storage'],
+    facilities: 'Hands-on practical training facility',
+    notices: [
+      'Workshop hours: 8 AM - 5 PM',
+      'Safety training mandatory for all users',
+      'Machine booking required',
+      'Maintenance schedule: Every Friday evening'
+    ]
+  },
+
+  // 5. LIBRARY - Central Building
+  'LIBRARY': {
+    id: 'LIBRARY',
+    name: 'Central Library',
+    emoji: '📚',
+    description: 'Main Information Resource Center',
+    location: 'Central (between Workshop, Event Hall, Canteen, Hostels)',
+    sections: [
+      'Reference Section',
+      'Book Stack',
+      'Reading Halls',
+      'Computer Lab',
+      'Digital Archive'
+    ],
+    amenities: ['10,000+ Books', 'Journals', 'Online Resources', 'WiFi', 'Reading Tables'],
+    facilities: 'Primary academic library for all students',
+    hours: '8 AM - 8 PM (Weekdays) | 10 AM - 6 PM (Sundays)',
+    notices: [
+      'Library card required for borrowing',
+      'Fine: ₹10/day for overdue books',
+      'New books added every month',
+      'Digital resources access 24/7'
+    ]
+  },
+
+  // 6. EVENT HALL - Right of Library
+  'HALL': {
+    id: 'HALL',
+    name: 'Event Hall',
+    emoji: '🎭',
+    description: 'Multi-Purpose Event Space',
+    location: 'Right of Library',
+    capacity: '500+ people',
+    sections: [
+      'Main Auditorium',
+      'Stage Area',
+      'Backstage Area',
+      'Seating Gallery'
+    ],
+    amenities: ['Sound System', 'Projection System', 'AC', 'Parking', 'Green Room'],
+    facilities: 'Lectures, seminars, cultural events, conferences',
+    bookingInfo: 'Contact: Event Management Office',
+    notices: [
+      'Booking: 2 weeks in advance',
+      'Available for college events',
+      'Audio-visual equipment included',
+      'Catering arrangements possible'
+    ]
+  },
+
+  // 7. DIPLOMA BUILDING - Right (First to enter from gate)
+  'DIPLOMA': {
+    id: 'DIPLOMA',
+    name: 'Diploma Building',
+    emoji: '🎓',
+    description: 'Diploma Courses',
+    location: 'Rightmost (First entrance area)',
+    sections: [
+      'Diploma 1st Year',
+      'Diploma 2nd Year',
+      'Diploma 3rd Year'
+    ],
+    amenities: ['Classrooms', 'Labs', 'Office', 'Practical Training Area'],
+    facilities: 'Complete diploma program facility',
+    notices: [
+      'Admissions open for diploma courses',
+      'Placement cell: 95% placement record',
+      'Industry internship program active',
+      'Skill development workshops monthly'
+    ]
+  },
+
+  // 8. CANTEEN - Last row, next to Library
+  'CANTEEN': {
+    id: 'CANTEEN',
+    name: 'Main Campus Canteen',
+    emoji: '🍽️',
+    description: 'Dining & Refreshment',
+    location: 'Last row, Center-Left (next to Library)',
+    hours: '8 AM - 8 PM (All Days)',
+    menu: [
+      { name: 'Vada Pav', price: '₹20', category: 'Breakfast' },
+      { name: 'Idli Sambhar', price: '₹40', category: 'Breakfast' },
+      { name: 'Poha', price: '₹30', category: 'Breakfast' },
+      { name: 'Paneer Naan', price: '₹100', category: 'Lunch' },
+      { name: 'Chicken Biryani', price: '₹120', category: 'Lunch' },
+      { name: 'Dal Rice', price: '₹60', category: 'Lunch' },
+      { name: 'Veg Thali', price: '₹90', category: 'Lunch' },
+      { name: 'Masala Tea', price: '₹10', category: 'Beverages' },
+      { name: 'Coffee', price: '₹15', category: 'Beverages' },
+      { name: 'Lassi', price: '₹25', category: 'Beverages' },
+      { name: 'Samosa', price: '₹15', category: 'Snacks' },
+      { name: 'Pakora', price: '₹25', category: 'Snacks' }
+    ],
+    offers: [
+      '🎁 Monday Combo: Any 2 items + Tea = ₹50',
+      '🎁 Students get 10% off with valid ID',
+      '🎁 Wednesday Special: 20% off beverages'
+    ]
+  },
+
+  // 9. BOYS HOSTEL - Last row, Left (Left of Canteen)
+  'BOYS_HOSTEL': {
+    id: 'BOYS_HOSTEL',
+    name: 'Boys Hostel',
+    emoji: '🏠',
+    description: 'Boys Residential Facility',
+    location: 'Last row, Left of Canteen',
+    totalRooms: 80,
+    studentsPerRoom: 3,
+    occupancy: '240/240',
+    amenities: [
+      '📶 High-speed WiFi',
+      '🧺 Laundry facility',
+      '🍽️ Mess (3 meals daily)',
+      '🏋️ Gym',
+      '📚 Study lounge',
+      '🎮 Recreation room'
+    ],
+    rules: [
+      'Visitors allowed until 7 PM',
+      'Quiet hours 10 PM - 8 AM',
+      'Security deposit: ₹5000',
+      'Monthly fee: ₹3000-4000'
+    ],
+    notices: [
+      'Room allotment: June 2026',
+      'Mess charges updated',
+      'Maintenance work scheduled'
+    ]
+  },
+
+  // 10. GIRLS HOSTEL - Last row, Right (Right of Canteen)
+  'GIRLS_HOSTEL': {
+    id: 'GIRLS_HOSTEL',
+    name: 'Girls Hostel',
+    emoji: '👩‍🎓',
+    description: 'Girls Residential Facility',
+    location: 'Last row, Right of Canteen',
+    totalRooms: 70,
+    studentsPerRoom: 2,
+    occupancy: '140/140',
+    amenities: [
+      '📶 High-speed WiFi',
+      '🧺 Laundry service',
+      '🍽️ Mess (3 meals daily)',
+      '🏋️ Women-only Gym',
+      '📚 Study room',
+      '💄 Grooming room'
+    ],
+    rules: [
+      'Guest entry by written permission',
+      'Curfew: 10 PM (weekdays) | 11 PM (weekends)',
+      'Security deposit: ₹6000',
+      'Monthly fee: ₹3500-4500'
+    ],
+    notices: [
+      'Room allotment: June 2026',
+      'Safety & security briefing mandatory',
+      'Monthly health checkup camp'
+    ]
+  }
+};
+
+// Hostels Data
+const demoHostels = {
+  'BOYS1': {
+    id: 'BOYS1',
+    name: 'Boys Hostel - Block A',
+    emoji: '🏠',
+    location: 'East Campus, Near Sports Complex',
+    totalRooms: 60,
+    studentsPerRoom: 3,
+    occupancy: '180/180',
+    amenities: [
+      '📶 High-speed WiFi in all rooms',
+      '🧺 Common laundry facility',
+      '📚 Study lounge with computers',
+      '🍳 Common kitchen facility',
+      '🏋️ Gym with basic equipment',
+      '🎮 Recreation room with games',
+      '🚿 Hot water 24/7'
+    ],
+    rules: [
+      'Visitors allowed until 7 PM only',
+      'No ragging of any kind',
+      'Maintain cleanliness in rooms and common areas',
+      'Quiet hours from 10 PM - 8 AM',
+      'Party/gathering permission from warden required',
+      'Security deposit: ₹5000'
+    ]
+  },
+  'BOYS2': {
+    id: 'BOYS2',
+    name: 'Boys Hostel - Block B',
+    emoji: '🏠',
+    location: 'West Campus, Near Library',
+    totalRooms: 45,
+    studentsPerRoom: 3,
+    occupancy: '135/135',
+    amenities: [
+      '📶 WiFi enabled with 100 Mbps speed',
+      '🧺 Dedicated laundry staff',
+      '📚 Quiet study zone',
+      '🍽️ Mess facility with 3 meals daily',
+      '🏋️ Equipped fitness center',
+      '⚽ Sports equipment storage',
+      '🔒 24/7 security with CCTV'
+    ],
+    rules: [
+      'Check-in/out timings: 6 AM - 10 PM',
+      'Medical emergencies: Warden on duty 24/7',
+      'ID verification mandatory for all visitors',
+      'No unauthorized guests overnight',
+      'Monthly room inspection by warden',
+      'Security deposit: ₹5000'
+    ]
+  },
+  'GIRLS1': {
+    id: 'GIRLS1',
+    name: 'Girls Hostel - Block A',
+    emoji: '👩‍🎓',
+    location: 'North Campus, Near Health Center',
+    totalRooms: 50,
+    studentsPerRoom: 2,
+    occupancy: '100/100',
+    amenities: [
+      '📶 Ultra-fast WiFi in all areas',
+      '🧺 Laundry service twice a week',
+      '📚 Well-equipped study library',
+      '🍽️ Mess with vegetarian options',
+      '🏋️ Women-only fitness zone',
+      '💄 Beauty and grooming room',
+      '🌿 Peaceful garden area'
+    ],
+    rules: [
+      'Guest entry by written permission only',
+      'Night curfew: 10 PM on weekdays, 11 PM on weekends',
+      'Parent meetings scheduled monthly',
+      'Dress code adherence expected',
+      'Smoking and drinking strictly prohibited',
+      'Security deposit: ₹6000'
+    ]
+  },
+  'GIRLS2': {
+    id: 'GIRLS2',
+    name: 'Girls Hostel - Block B',
+    emoji: '👩‍🎓',
+    location: 'South Campus, Near Main Gate',
+    totalRooms: 55,
+    studentsPerRoom: 2,
+    occupancy: '110/110',
+    amenities: [
+      '📶 Fiber optic WiFi connectivity',
+      '🧺 Full laundry service available',
+      '📚 Computer lab with internet',
+      '🍽️ Multi-cuisine mess facility',
+      '🏋️ Modern fitness equipment',
+      '💅 Saloon and grooming area',
+      '🛁 Hot water bath facilities'
+    ],
+    rules: [
+      'Guest hours: 10 AM - 6 PM only',
+      'Parents must register before visits',
+      'Weekly room cleanliness checks',
+      'No cooking in rooms',
+      'Emergency contact with parents twice monthly',
+      'Security deposit: ₹6000'
+    ]
+  }
+};
+
+// Canteen Data
+const demoCanteen = {
+  'MAIN': {
+    id: 'MAIN',
+    name: 'Main Campus Canteen',
+    emoji: '🍽️',
+    location: 'Central Campus, Ground Floor',
+    hours: '8:00 AM - 8:00 PM (All Days)',
+    menu: [
+      { name: 'Vada Pav', price: '₹20', category: 'Breakfast' },
+      { name: 'Idli Sambhar', price: '₹40', category: 'Breakfast' },
+      { name: 'Poha', price: '₹30', category: 'Breakfast' },
+      { name: 'Misal Pav', price: '₹50', category: 'Breakfast' },
+      { name: 'Paneer Naan', price: '₹100', category: 'Lunch' },
+      { name: 'Chicken Biryani', price: '₹120', category: 'Lunch' },
+      { name: 'Dal Rice', price: '₹60', category: 'Lunch' },
+      { name: 'Veg Thali', price: '₹90', category: 'Lunch' },
+      { name: 'Alu Paratha', price: '₹50', category: 'Lunch' },
+      { name: 'Masala Tea', price: '₹10', category: 'Beverages' },
+      { name: 'Coffee', price: '₹15', category: 'Beverages' },
+      { name: 'Lassi', price: '₹25', category: 'Beverages' },
+      { name: 'Fresh Juice', price: '₹30', category: 'Beverages' },
+      { name: 'Samosa', price: '₹15', category: 'Snacks' },
+      { name: 'Pakora', price: '₹25', category: 'Snacks' },
+      { name: 'Momos', price: '₹35', category: 'Snacks' },
+      { name: 'Sandwich', price: '₹60', category: 'Snacks' },
+      { name: 'Chole Bhature', price: '₹80', category: 'Lunch' },
+      { name: 'Roti + Curry', price: '₹70', category: 'Lunch' },
+      { name: 'Pav Bhaji', price: '₹50', category: 'Lunch' }
+    ],
+    offers: [
+      '🎁 Mon  // Real campus layout visualization - Formation with even spacing
+  const buildingPositions = {
+    'BOYS_HOSTEL': { x: '15%', y: '10%', depth: 2 },   // Top row - left
+    'CANTEEN': { x: '50%', y: '10%', depth: 3 },       // Top row - center
+    'GIRLS_HOSTEL': { x: '85%', y: '10%', depth: 2 },  // Top row - right
+    'WORKSHOP': { x: '15%', y: '40%', depth: 1 },      // Middle row - left
+    'LIBRARY': { x: '50%', y: '40%', depth: 4 },       // Middle row - center (prominent)
+    'HALL': { x: '85%', y: '40%', depth: 1 },          // Middle row - right
+    'CS_ENTC': { x: '15%', y: '70%', depth: 3 },       // Bottom row - left
+    'MAIN': { x: '50%', y: '70%', depth: 4 },          // Bottom row - center (prominent)
+    'DIPLOMA': { x: '85%', y: '70%', depth: 1 }        // Bottom row - right
+90', category: 'Coffee' },
+      { name: 'Iced Coffee', price: '₹70', category: 'Coffee' },
+      { name: 'Croissant', price: '₹60', category: 'Bakery' },
+      { name: 'Muffin', price: '₹50', category: 'Bakery' },
+      { name: 'Pastry', price: '₹45', category: 'Bakery' },
+      {     
+    // Add 3D depth effect based on building importance
+    const depthLevels = {
+      1: { scale: '0.9', shadow: '3px 3px 8px' },
+      2: { scale: '1.0', shadow: '5px 5px 12px' },
+      3: { scale: '1.05', shadow: '8px 8px 16px' },
+      4: { scale: '1.1', shadow: '10px 10px 20px' }
+    };
+    const depth = depthLevels[pos.depth] || depthLevels[1];
+    buildingEl.style.transform = `scale(${depth.scale}) translateZ(${pos.depth * 10}px)`;
+    buildingEl.style.boxShadow = `${depth.shadow} rgba(26,115,232,0.2)`;
+    
+name: 'Brownie', price: '₹55', category: 'Bakery' },
+      { name: 'Caesar Salad', price: '₹120', category: 'Healthy' },
+      { name: 'Fruit Salad', price: '₹100', category: 'Healthy' },
+      { name: 'Smoothie Bowl', price: '₹110', category: 'Healthy' },
+      { name: 'Avocado Toast', price: '₹130', category: 'Healthy' },
+      { name: 'Sandwich (Veg)', price: '₹80', category: 'Sandwich' },
+      { name: 'Sandwich (Non-Veg)', price: '₹100', category: 'Sandwich' },
+      { name: 'Wrap', price: '₹90', category: 'Sandwich' }
+    ],
+    offers: [
+      '☕ Buy 2 coffees, Get 1 Pastry Free',
+      '☕ Happy Hour: 3-4 PM - 25% discount on all items',
+      '☕ Loyalty Card: Every 5th coffee is free',
+      '☕ Weekend Special: Brunch menu available',
+      '☕ Take away available with 5% discount'
+    ]
+  }
+};
+
+let allBuildings = [...Object.values(demoBuildings)];
+let allHostels = [...Object.values(demoHostels)];
+let allCanteens = [...Object.values(demoCanteen)];
+let selectedBuilding = null;
+let selectedHostel = null;
+let selectedCanteen = null;
+
+// Filter Category
+window.filterCategory = function(category) {
+  // Update button states
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+
+  // Hide all sections
+  document.getElementById('buildingsSection').style.display = 'none';
+  document.getElementById('hostelsSection').style.display = 'none';
+  document.getElementById('canteenSection').style.display = 'none';
+
+  // Show selected section
+  if (category === 'buildings') {
+    document.getElementById('buildingsSection').style.display = 'block';
+    renderInteriorMap();
+  } else if (category === 'hostels') {
+    document.getElementById('hostelsSection').style.display = 'block';
+    renderHostelsGrid();
+  } else if (category === 'canteen') {
+    document.getElementById('canteenSection').style.display = 'block';
+    renderCanteenGrid();
+  }
+};
+
+// Show/Hide Sections
+window.showSection = function(sectionId) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
+  
+  if (sectionId === 'interior') {
+    setTimeout(renderInteriorMap, 100);
+  }
+};
+
+// Render Interior Map with Clickable Buildings
+function renderInteriorMap() {
+  const mapContainer = document.getElementById('interiorMap');
+  mapContainer.innerHTML = '';
+
+  // Create a grid layout with more positions for 16+ buildings
+  const cols = 4;
+  const rows = Math.ceil(allBuildings.length / cols);
+  
+  allBuildings.forEach((building, index) => {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    const x = (col * 25) + 5;
+    const y = (row * (100 / rows)) + (100 / (rows * 2)) - 5;
+
+    const buildingEl = document.createElement('div');
+    buildingEl.className = 'building';
+    buildingEl.style.left = x + '%';
+    buildingEl.style.top = y + '%';
+    buildingEl.innerHTML = `
+      <div class="building-emoji">${building.emoji}</div>
+      <div class="building-name">${building.name}</div>
+    `;
+    buildingEl.onclick = () => openBuildingModal(building);
+    mapContainer.appendChild(buildingEl);
+  });
+}
+
+// Render Hostels Grid
+function renderHostelsGrid() {
+  const hostelsGrid = document.getElementById('hostelsGrid');
+  hostelsGrid.innerHTML = '';
+
+  allHostels.forEach(hostel => {
+    const facilityCard = document.createElement('div');
+    facilityCard.className = 'facility-card';
+    facilityCard.innerHTML = `
+      <div class="facility-icon">${hostel.emoji}</div>
+      <div class="facility-name">${hostel.name}</div>
+      <div class="facility-info">
+        <p><strong>Rooms:</strong> ${hostel.totalRooms}</p>
+        <p><strong>Per Room:</strong> ${hostel.studentsPerRoom} Students</p>
+        <p style="margin-top: 10px; color: #1a73e8;">Click for details →</p>
+      </div>
+    `;
+    facilityCard.onclick = () => openHostelModal(hostel);
+    hostelsGrid.appendChild(facilityCard);
+  });
+}
+
+// Render Canteen Grid
+function renderCanteenGrid() {
+  const canteenGrid = document.getElementById('canteenGrid');
+  canteenGrid.innerHTML = '';
+
+  allCanteens.forEach(canteen => {
+    const facilityCard = document.createElement('div');
+    facilityCard.className = 'facility-card';
+    facilityCard.innerHTML = `
+      <div class="facility-icon">${canteen.emoji}</div>
+      <div class="facility-name">${canteen.name}</div>
+      <div class="facility-info">
+        <p><strong>📍</strong> ${canteen.location}</p>
+        <p><strong>🕒</strong> ${canteen.hours}</p>
+        <p style="margin-top: 10px; color: #1a73e8;">View Menu →</p>
+      </div>
+    `;
+    facilityCard.onclick = () => openCanteenModal(canteen);
+    canteenGrid.appendChild(facilityCard);
+  });
+}
+
+// Open Building Modal
+window.openBuildingModal = function(building) {
+  selectedBuilding = building;
+  document.getElementById('buildingTitle').textContent = building.name;
+  
+  // Add department and year badges
+  const badgesContainer = document.getElementById('buildingBadges');
+  badgesContainer.innerHTML = `
+    <span class="department-badge">${building.department}</span>
+    <span class="year-badge">${building.year}</span>
+  `;
+  
+  document.getElementById('courseInfo').textContent = `${building.course} - ${building.year}`;
+  document.getElementById('facultyInfo').textContent = building.faculty;
+  document.getElementById('roomInfo').textContent = building.room;
+
+  // Populate Subjects
+  const subjectsList = document.getElementById('subjectsList');
+  subjectsList.innerHTML = '<div class="subjects-list">' + 
+    building.subjects.map(s => `<div class="subject-item">📖 ${s}</div>`).join('') + 
+    '</div>';
+
+  // Populate Timetable
+  const timetableList = document.getElementById('timetableList');
+  timetableList.innerHTML = '<div class="timetable-list">' + 
+    building.timetable.map(t => `<div class="timetable-item"><strong>${t.day}</strong><br>${t.time}<br>📚 ${t.subject}</div>`).join('') + 
+    '</div>';
+
+  // Populate Notices
+  const noticesList = document.getElementById('noticesList');
+  noticesList.innerHTML = '<div class="notices-list">' + 
+    building.notices.map(n => `<div class="notice-item">📢 ${n}</div>`).join('') + 
+    '</div>';
+
+  document.getElementById('buildingModal').classList.add('show');
+};
+
+// Open Hostel Modal
+window.openHostelModal = function(hostel) {
+  selectedHostel = hostel;
+  document.getElementById('hostelTitle').textContent = hostel.name;
+  document.getElementById('hostelLocation').textContent = hostel.location;
+  document.getElementById('totalRooms').textContent = hostel.totalRooms;
+  document.getElementById('studentsPerRoom').textContent = hostel.studentsPerRoom;
+
+  // Populate Amenities
+  const amenitiesList = document.getElementById('amenitiesList');
+  amenitiesList.innerHTML = '<div class="subjects-list">' + 
+    hostel.amenities.map(a => `<div class="subject-item">${a}</div>`).join('') + 
+    '</div>';
+
+  // Populate Rules
+  const rulesList = document.getElementById('rulesList');
+  rulesList.innerHTML = '<div class="subjects-list">' + 
+    hostel.rules.map(r => `<div class="subject-item">✓ ${r}</div>`).join('') + 
+    '</div>';
+
+  document.getElementById('hostelModal').classList.add('show');
+};
+
+// Open Canteen Modal
+window.openCanteenModal = function(canteen) {
+  selectedCanteen = canteen;
+  document.getElementById('canteenTitle').textContent = canteen.name;
+  document.getElementById('canteenHours').textContent = `📍 Location: ${canteen.location} | 🕒 Hours: ${canteen.hours}`;
+
+  // Populate Menu Items
+  const menuList = document.getElementById('menuList');
+  menuList.innerHTML = canteen.menu.map(item => `
+    <div class="menu-item">
+      <div class="menu-item-name">${item.name}</div>
+      <div class="menu-item-price">${item.price}</div>
+    </div>
+  `).join('');
+
+  // Populate Offers
+  const offersList = document.getElementById('offersList');
+  offersList.innerHTML = '<div class="subjects-list">' + 
+    canteen.offers.map(o => `<div class="subject-item">${o}</div>`).join('') + 
+    '</div>';
+
+  document.getElementById('canteenModal').classList.add('show');
+};
+
+// Close Modal
+window.closeBuildingModal = function() {
+  document.getElementById('buildingModal').classList.remove('show');
+  selectedBuilding = null;
+};
+
+// Close Hostel Modal
+window.closeHostelModal = function() {
+  document.getElementById('hostelModal').classList.remove('show');
+  selectedHostel = null;
+};
+
+// Close Canteen Modal
+window.closeCanteenModal = function() {
+  document.getElementById('canteenModal').classList.remove('show');
+  selectedCanteen = n// ==================== NEW FEATURES ====================
+
+// 1. FAVORITES SYSTEM
+const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+function toggleFavorite(buildingId) {
+  const idx = favorites.indexOf(buildingId);
+  if (idx > -1) {
+    favorites.splice(idx, 1);
+  } else {
+    favorites.push(buildingId);
+  }
+  localStorage.setItem('favorites', JSON.stringify(favorites));
+  showNotification(`${idx > -1 ? 'Removed from' : 'Added to'} favorites!`);
+}
+
+function isFavorite(buildingId) {
+  return favorites.includes(buildingId);
+}
+
+// 2. NOTIFICATION SYSTEM
+function showNotification(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = 'notification-toast';
+  toast.innerHTML = `<strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideIn 0.3s ease reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// 3. SEARCH FUNCTIONALITY
+function initSearch() {
+  const searchBox = document.getElementById('mapSearch');
+  if (!searchBox) return;
+  
+  searchBox.addEventListener('keyup', function() {
+    const query = this.value.toLowerCase();
+    const buildings = Object.values(demoBuildings);
+    const results = buildings.filter(b => 
+      b.name.toLowerCase().includes(query) ||
+      b.description.toLowerCase().includes(query)
+    );
+    
+    displaySearchResults(results);
+  });
+}
+
+function displaySearchResults(results) {
+  const resultsContainer = document.getElementById('searchResults');
+  if (!resultsContainer) return;
+  
+  if (results.length === 0) {
+    resultsContainer.innerHTML = '<div style="padding: 15px; color: #999;">No buildings found</div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = results.map(b => `
+    <div class="search-result-item" onclick="openBuildingModal(demoBuildings['${b.id}'])">
+      <strong>${b.emoji} ${b.name}</strong>
+      <div style="font-size: 12px; color: #666;">${b.description}</div>
+    </div>
+  `).join('');
+}
+
+// 4. DARK MODE
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+}
+
+// Apply saved dark mode
+if (localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark-mode');
+}
+
+// 5. RATING SYSTEM
+const ratings = JSON.parse(localStorage.getItem('buildingRatings') || '{}');
+
+function rateBuilding(buildingId, rating) {
+  ratings[buildingId] = rating;
+  localStorage.setItem('buildingRatings', JSON.stringify(ratings));
+  showNotification(`Rated ${rating} stars!`);
+}
+
+function getAverageRating(buildingId) {
+  return ratings[buildingId] || 0;
+}
+
+// 6. BUILDING STATISTICS
+function calculateStats() {
+  const totalBuildings = Object.keys(demoBuildings).length;
+  const totalHostelRooms = Object.values(demoHostels).reduce((sum, h) => sum + h.totalRooms, 0);
+  const totalCapacity = Object.values(demoHostels).reduce((sum, h) => sum + (h.totalRooms * h.studentsPerRoom), 0);
+  const menuItems = demoCanteen.MAIN.menu.length;
+  
+  return {
+    totalBuildings,
+    totalHostelRooms,
+    totalCapacity,
+    menuItems
+  };
+}
+
+// 7. ROUTE PLANNING
+function findRoute(fromBuilding, toBuilding) {
+  const routes = {
+    'MAIN-CS_ENTC': ['Main Building (Center)', 'Head towards Left', 'Reach CS/ENTC Building'],
+    'MAIN-LIBRARY': ['Main Building (Center)', 'Head towards Up', 'Reach Central Library'],
+    'CS_ENTC-LIBRARY': ['CS/ENTC Building (Left)', 'Move Right-Up', 'Reach Central Library'],
+    'LIBRARY-CANTEEN': ['Central Library (Center)', 'Head Down', 'Reach Canteen']
+  };
+  
+  const key = `${fromBuilding}-${toBuilding}`;
+  return routes[key] || ['Navigate via campus map'];
+}
+
+// 8. QUICK FILTERS
+function filterBuildingsByType(type) {
+  const filtered = Object.values(demoBuildings).filter(b => {
+    if (type === 'academic') return ['CS_ENTC', 'MAIN', 'DIPLOMA', 'WORKSHOP', 'CIVIL'].includes(b.id);
+    if (type === 'support') return ['LIBRARY', 'HALL', 'WORKSHOP'].includes(b.id);
+    if (type === 'residential') return ['BOYS_HOSTEL', 'GIRLS_HOSTEL'].includes(b.id);
+    if (type === 'dining') return ['CANTEEN'].includes(b.id);
+    return true;
+  });
+  return filtered;
+}
+
+// 9. EXPORT DATA
+function exportBuildingData(format = 'json') {
+  const data = {
+    buildings: demoBuildings,
+    hostels: demoHostels,
+    canteen: demoCanteen,
+    exportDate: new Date().toISOString()
+  };
+  
+  if (format === 'json') {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    downloadFile(blob, 'campus-data.json');
+  }
+}
+
+function downloadFile(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 10. KEYBOARD SHORTCUTS
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('buildingModal')?.classList.remove('show');
+    document.getElementById('hostelModal')?.classList.remove('show');
+    document.getElementById('canteenModal')?.classList.remove('show');
+  }
+  if (e.ctrlKey && e.key === 'k') {
+    e.preventDefault();
+    const searchBox = document.getElementById('mapSearch');
+    if (searchBox) searchBox.focus();
+  }
+  if (e.ctrlKey && e.key === 'd') {
+    e.preventDefault();
+    toggleDarkMode();
+  }
+});
+
+// 11. OCCUPANCY TRACKER
+function updateOccupancy() {
+  const stats = {
+    hostelOccupancy: {boys: '240/240 (100%)', girls: '140/140 (100%)'},
+    canteenOccupancy: 'Moderate',
+    libraryOccupancy: 'Light',
+    labOccupancy: 'Heavy'
+  };
+  return stats;
+}
+
+// 12. CAMPUS EVENTS
+const campusEvents = [
+  {date: '2026-06-01', event: 'Orientation', location: 'Event Hall'},
+  {date: '2026-06-05', event: 'Tech Fest 2026', location: 'Campus'},
+  {date: '2026-06-15', event: 'Sports Day', location: 'Ground'}
+];
+
+function getUpcomingEvents(days = 7) {
+  const today = new Date();
+  return campusEvents.filter(e => {
+    const eventDate = new Date(e.date);
+    return eventDate >= today && eventDate <= new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
+  });
+}
+
+// 13. INITIAL SETUP
+document.addEventListener('DOMContentLoaded', function() {
+  initSearch();
+  const stats = calculateStats();
+  console.log('Campus Statistics:', stats);
+  setTimeout(() => {
+    showNotification('Welcome to Campus Navigator! 🎓');
+  }, 500);
+});
+
+ull;
+};
+
+// Switch Tabs
+window.switchTab = function(tabName) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+};
+
+// Auth Check
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+  }
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const buildingModal = document.getElementById('buildingModal');
+  const hostelModal = document.getElementById('hostelModal');
+  const canteenModal = document.getElementById('canteenModal');
+  
+  if (event.target == buildingModal) {
+    buildingModal.classList.remove('show');
+  }
+  if (event.target == hostelModal) {
+    hostelModal.classList.remove('show');
+  }
+  if (event.target == canteenModal) {
+    canteenModal.classList.remove('show');
+  }
+};
+
+</script>
+
+</body>
+</html>

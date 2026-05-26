@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Exams - College Location App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+      color: #666;
+    }
+
+    .filters {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-group label {
+      font-weight: 600;
+      color: #555;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      padding: 0.5rem 1rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .exams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .exam-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .exam-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .exam-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+    }
+
+    .exam-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .exam-subject {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .exam-body {
+      padding: 1.5rem;
+    }
+
+    .exam-detail {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      color: #666;
+    }
+
+    .exam-detail strong {
+      color: #333;
+    }
+
+    .exam-status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .exam-status.upcoming {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .exam-status.ongoing {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .exam-status.completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .exam-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .no-exams {
+      background: white;
+      padding: 3rem;
+      border-radius: 10px;
+      text-align: center;
+      color: #999;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+
+      .exams-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .exam-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/student-dashboard.html" class="back-btn">← Back to Dashboard</a>
+
+    <div class="page-header">
+      <h1>📚 Available Exams</h1>
+      <p>Browse and view exam questions</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label for="subject-filter">Subject:</label>
+        <input 
+          type="text" 
+          id="subject-filter" 
+          placeholder="Filter by subject..."
+        >
+      </div>
+      <div class="filter-group">
+        <label for="sort-by">Sort by:</label>
+        <select id="sort-by">
+          <option value="date-asc">Date (Earliest First)</option>
+          <option value="date-desc">Date (Latest First)</option>
+          <option value="title">Title (A-Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Exams Grid -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading exams...</p>
+    </div>
+
+    <div id="exams-grid" class="exams-grid" style="display: none;"></div>
+
+    <div id="no-exams" class="no-exams" style="display: none;">
+      <p>📋 No exams available. Check back later!</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initAuthGuard, verifyStudentAccess } from './auth-guard.js';
+    import { getAllExams } from './config/firestore-schema.js';
+
+    let allExams = [];
+
+    async function initPage() {
+      const hasAccess = await initAuthGuard();
+      if (!hasAccess) return;
+
+      await verifyStudentAccess();
+      await loadExams();
+      setupFilters();
+    }
+
+    async function loadExams() {
+      try {
+        const exams = await getAllExams();
+        allExams = exams.sort((a, b) => {
+          const dateA = new Date(a.date.seconds ? a.date.seconds * 1000 : a.date);
+          const dateB = new Date(b.date.seconds ? b.date.seconds * 1000 : b.date);
+          return dateA - dateB;
+        });
+
+        document.getElementById('loading').style.display = 'none';
+
+        if (allExams.length === 0) {
+          document.getElementById('no-exams').style.display = 'block';
+          return;
+        }
+
+        displayExams(allExams);
+
+      } catch (error) {
+        console.error('Error loading exams:', error);
+        document.getElementById('loading').innerHTML = '<p>Error loading exams. Please refresh.</p>';
+      }
+    }
+
+    function displayExams(exams) {
+      const grid = document.getElementById('exams-grid');
+      const loading = document.getElementById('loading');
+      const noExams = document.getElementById('no-exams');
+
+      loading.style.display = 'none';
+
+      if (exams.length === 0) {
+        noExams.style.display = 'block';
+        grid.style.display = 'none';
+        return;
+      }
+
+      grid.innerHTML = exams.map(exam => {
+        const examDate = new Date(exam.date.seconds ? exam.date.seconds * 1000 : exam.date);
+        const now = new Date();
+        
+        let status = 'upcoming';
+        if (examDate < now) status = 'completed';
+
+        const statusLabel = status === 'completed' ? 'Completed' : 'Upcoming';
+        const statusClass = status;
+
+        return `
+          <div class="exam-card">
+            <div class="exam-header">
+              <div class="exam-title">${exam.title}</div>
+              <div class="exam-subject">${exam.subject}</div>
+            </div>
+            <div class="exam-body">
+              <span class="exam-status ${statusClass}">${statusLabel}</span>
+              <div class="exam-detail">
+                <span>📅</span>
+                <span><strong>Date:</strong> ${examDate.toLocaleDateString()} ${examDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              <div class="exam-detail">
+                <span>⏱️</span>
+                <span><strong>Duration:</strong> ${exam.duration} minutes</span>
+              </div>
+              <div class="exam-detail">
+                <span>📊</span>
+                <span><strong>Marks:</strong> ${exam.totalMarks}</span>
+              </div>
+              ${exam.description ? `<div class="exam-detail"><strong>Description:</strong> ${exam.description}</div>` : ''}
+              <div class="exam-actions">
+                <a href="/exam-viewer.html?id=${exam.id}" class="btn btn-primary">View Questions</a>
+                <button class="btn btn-secondary" onclick="saveForLater('${exam.id}')">Save</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      grid.style.display = 'grid';
+      noExams.style.display = 'none';
+    }
+
+    function setupFilters() {
+      const subjectFilter = document.getElementById('subject-filter');
+      const sortBy = document.getElementById('sort-by');
+
+      subjectFilter.addEventListener('input', filterAndSort);
+      sortBy.addEventListener('change', filterAndSort);
+    }
+
+    function filterAndSort() {
+      let filtered = allExams;
+
+      const subject = document.getElementById('subject-filter').value.toLowerCase();
+      if (subject) {
+        filtered = filtered.filter(exam => 
+          exam.subject.toLowerCase().includes(subject)
+        );
+      }
+
+      const sortOption = document.getElementById('sort-by').value;
+      if (sortOption === 'date-desc') {
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.date.seconds ? a.date.seconds * 1000 : a.date);
+          const dateB = new Date(b.date.seconds ? b.date.seconds * 1000 : b.date);
+          return dateB - dateA;
+        });
+      } else if (sortOption === 'title') {
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+      }
+
+      displayExams(filtered);
+    }
+
+    window.saveForLater = function(examId) {
+      const saved = JSON.parse(localStorage.getItem('savedExams') || '[]');
+      if (!saved.includes(examId)) {
+        saved.push(examId);
+        localStorage.setItem('savedExams', JSON.stringify(saved));
+        alert('Exam saved for later!');
+      } else {
+        alert('Already saved!');
+      }
+    };
+
+    initPage();
+  </script>
+</body>
+</html>

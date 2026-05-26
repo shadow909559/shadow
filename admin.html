@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel - Smart College Navigation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      background: #f4f8ff;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      height: 100vh;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      padding: 25px 20px;
+      position: fixed;
+    }
+
+    .sidebar h2 {
+      color: #1a73e8;
+      margin-bottom: 40px;
+    }
+
+    .sidebar a {
+      display: block;
+      text-decoration: none;
+      color: #333;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    /* Main */
+    .main {
+      margin-left: 240px;
+      width: 100%;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: #1a73e8;
+      color: white;
+      padding: 18px 30px;
+      font-size: 18px;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Content */
+    .content {
+      padding: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      margin-bottom: 40px;
+      transition: 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 30px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      margin-bottom: 20px;
+      color: #1a73e8;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #1a73e8;
+      outline: none;
+      box-shadow: 0 0 0 2px #e8f0fe;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: #1a73e8;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #1558b0;
+    }
+
+    .log-card {
+      border: 1px solid #e0e0e0;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      background: #f9fbff;
+      transition: 0.3s;
+    }
+
+    .log-card:hover {
+      background: #e8f0fe;
+    }
+
+    .small-text {
+      font-size: 12px;
+      color: #666;
+    }
+
+    #adminMsg {
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table th {
+      background: #1a73e8;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    table td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    table tr:hover {
+      background: #f9fbff;
+    }
+
+    .search-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-container input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .delete-btn {
+      background: #d32f2f;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .delete-btn:hover {
+      background: #b71c1c;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-box {
+      background: linear-gradient(135deg, #1a73e8, #4285f4);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-box h4 {
+      font-size: 28px;
+      margin: 10px 0;
+    }
+
+    .stat-box p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .status-pass {
+      background: #4caf50;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .status-fail {
+      background: #f44336;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .pass-marks-input {
+      max-width: 200px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Admin 🎓</h2>
+  <a href="admin.html">Dashboard</a>
+  <a href="#upload" onclick="showSection('upload')">Upload Results</a>
+  <a href="#staff" onclick="showSection('staff')">Staff - View Results</a>
+  <a href="#questions" onclick="showSection('questions')">Add Questions</a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    Admin Panel - Smart College Navigation
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Upload Result Section -->
+    <div id="upload" class="section active">
+      <!-- Upload Result Card -->
+      <div class="card">
+        <h3>Upload Student Result</h3>
+
+        <input type="text" id="studentEmail" placeholder="Student Email">
+        <input type="text" id="semester" placeholder="Semester (e.g., Sem 1, Sem 2)">
+        <input type="text" id="subject" placeholder="Subject">
+        <input type="number" id="marks" placeholder="Marks">
+
+        <button id="uploadBtn">Upload Result</button>
+
+        <p id="adminMsg"></p>
+      </div>
+
+      <!-- Logs Card -->
+      <div class="card">
+        <h3>Admin Activity Logs 📜</h3>
+        <div id="logsContainer">Loading logs...</div>
+      </div>
+    </div>
+
+    <!-- Staff - View Results Section -->
+    <div id="staff" class="section">
+      <div class="card">
+        <h3>📊 All Student Results</h3>
+        
+        <!-- Stats -->
+        <div class="stats">
+          <div class="stat-box">
+            <p>Total Results</p>
+            <h4 id="totalResults">0</h4>
+          </div>
+          <div class="stat-box">
+            <p>Total Students</p>
+            <h4 id="totalStudents">0</h4>
+          </div>
+          <div class="stat-box">
+            <p>Subjects</p>
+            <h4 id="totalSubjects">0</h4>
+          </div>
+          <div class="stat-box">
+            <p>Avg Marks</p>
+            <h4 id="avgMarks">0</h4>
+          </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-container">
+          <input type="text" id="searchEmail" placeholder="Search by Student Email...">
+          <input type="text" id="searchSubject" placeholder="Search by Subject...">
+          <button id="resetBtn">Reset Filters</button>
+        </div>
+
+        <!-- Pass Marks Setting -->
+        <div class="search-container">
+          <input type="number" id="passMarks" class="pass-marks-input" placeholder="Pass Marks (default: 40)" value="40" min="0" max="100">
+          <span style="color: #666; font-size: 14px; align-self: center;">Marks required to pass</span>
+        </div>
+
+        <!-- Results Table -->
+        <div id="resultsContainer">
+          <div class="no-results">Loading results...</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="questions" class="section">
+      <div class="card">
+        <h3>📝 Add Exam Questions</h3>
+
+        <div class="search-container">
+          <input type="text" id="qYear" placeholder="Year (e.g., FY, SY, TY)">
+          <input type="text" id="qSemester" placeholder="Semester (e.g., SEM1, SEM2, SEM3)">
+          <input type="text" id="qSubject" placeholder="Subject (e.g., C Programming)">
+        </div>
+
+        <input type="text" id="qText" placeholder="Question text">
+        <input type="text" id="qOpt1" placeholder="Option 1">
+        <input type="text" id="qOpt2" placeholder="Option 2">
+        <input type="text" id="qOpt3" placeholder="Option 3">
+        <input type="text" id="qOpt4" placeholder="Option 4">
+
+        <div class="search-container">
+          <input type="number" id="qCorrect" placeholder="Correct option index (0-3)" min="0" max="3">
+          <input type="number" id="qMarks" placeholder="Marks" min="1" value="1">
+          <button id="addQuestionBtn">Add Question</button>
+        </div>
+
+        <p id="questionMsg"></p>
+      </div>
+
+      <div class="card">
+        <h3>📚 Question Bank</h3>
+
+        <div class="search-container">
+          <input type="text" id="filterYear" placeholder="Filter Year (FY/SY/TY)">
+          <input type="text" id="filterSemester" placeholder="Filter Semester (SEM1/SEM2)">
+          <input type="text" id="filterSubject" placeholder="Filter Subject">
+          <button id="applyQuestionFilter">Apply</button>
+        </div>
+
+        <div id="questionsList">Loading questions...</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  deleteDoc,
+  doc,
+  where,
+  getDocs,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+import { 
+  getAuth, 
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBzMLug_TU5BW7fxEpAND4KiyVjeWcxcrs",
+  authDomain: "college-location-app.firebaseapp.com",
+  projectId: "college-location-app",
+  storageBucket: "college-location-app.firebasestorage.app",
+  messagingSenderId: "1000054805371",
+  appId: "1:1000054805371:web:93f13c5f877dba7b6863de"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const adminMsg = document.getElementById("adminMsg");
+const logsContainer = document.getElementById("logsContainer");
+const questionMsg = document.getElementById("questionMsg");
+
+let currentAdminEmail = "";
+
+// Admin Protection
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+  const userDoc = userSnap.exists() ? userSnap.data() : null;
+  if (!userDoc || userDoc.role !== "admin") {
+    alert("Access Denied! Admins only.");
+    await signOut(auth);
+    window.location.href = "login.html";
+    return;
+  }
+
+  currentAdminEmail = user.email;
+  loadActivityLogs();
+  loadAllResults();
+  loadQuestions();
+});
+
+// Section Navigation
+window.showSection = function(sectionId) {
+  const sections = document.querySelectorAll('.section');
+  sections.forEach(section => section.classList.remove('active'));
+  document.getElementById(sectionId).classList.add('active');
+};
+
+// Upload Result
+document.getElementById("uploadBtn").addEventListener("click", async () => {
+
+  const email = document.getElementById("studentEmail").value;
+  const semester = document.getElementById("semester").value;
+  const subject = document.getElementById("subject").value;
+  const marks = document.getElementById("marks").value;
+
+  if (!email || !semester || !subject || !marks) {
+    adminMsg.style.color = "red";
+    adminMsg.innerText = "Please fill all fields!";
+    return;
+  }
+
+  try {
+
+    await addDoc(collection(db, "results"), {
+      email: email,
+      semester: semester,
+      subject: subject,
+      marks: Number(marks),
+      timestamp: serverTimestamp()
+    });
+
+    await addDoc(collection(db, "activityLogs"), {
+      action: "Uploaded Result",
+      details: semester + " - " + subject + " - " + email,
+      adminEmail: currentAdminEmail,
+      timestamp: serverTimestamp()
+    });
+
+    adminMsg.style.color = "green";
+    adminMsg.innerText = "Result Uploaded Successfully!";
+
+    document.getElementById("studentEmail").value = "";
+    document.getElementById("semester").value = "";
+    document.getElementById("subject").value = "";
+    document.getElementById("marks").value = "";
+
+  } catch (error) {
+    adminMsg.style.color = "red";
+    adminMsg.innerText = "Error: " + error.message;
+  }
+});
+
+// Load Logs
+function loadActivityLogs() {
+
+  const logsQuery = query(
+    collection(db, "activityLogs"),
+    orderBy("timestamp", "desc")
+  );
+
+  onSnapshot(logsQuery, (snapshot) => {
+
+    if (snapshot.empty) {
+      logsContainer.innerHTML = "No activity yet.";
+      return;
+    }
+
+    let output = "";
+
+    snapshot.forEach((doc) => {
+
+      const data = doc.data();
+      const time = data.timestamp?.toDate().toLocaleString() || "";
+
+      output += `
+        <div class="log-card">
+          <strong>${data.action}</strong><br>
+          ${data.details}<br>
+          <div class="small-text">${data.adminEmail}</div>
+          <div class="small-text">${time}</div>
+        </div>
+      `;
+    });
+
+    logsContainer.innerHTML = output;
+
+  });
+}
+
+// Load All Results for Staff Section
+let allResults = [];
+
+function loadAllResults() {
+  const resultsQuery = query(
+    collection(db, "results"),
+    orderBy("timestamp", "desc")
+  );
+
+  onSnapshot(resultsQuery, (snapshot) => {
+    allResults = [];
+    
+    snapshot.forEach((doc) => {
+      allResults.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    displayResults(allResults);
+    updateStats(allResults);
+  });
+}
+
+function displayResults(results) {
+  const resultsContainer = document.getElementById("resultsContainer");
+
+  if (results.length === 0) {
+    resultsContainer.innerHTML = '<div class="no-results">No results found. Upload some results first!</div>';
+    return;
+  }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Student Email</th>
+          <th>Semester</th>
+          <th>Subject</th>
+          <th>Marks</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  const passMarks = Number(document.getElementById("passMarks").value) || 40;
+
+  results.forEach((result) => {
+    const date = result.timestamp?.toDate().toLocaleDateString() || "N/A";
+    const status = result.marks >= passMarks ? "PASS" : "FAIL";
+    const statusClass = result.marks >= passMarks ? "status-pass" : "status-fail";
+    const semester = result.semester || "N/A";
+    html += `
+      <tr>
+        <td>${result.email}</td>
+        <td>${semester}</td>
+        <td>${result.subject}</td>
+        <td>${result.marks}</td>
+        <td><span class="${statusClass}">${status}</span></td>
+        <td>${date}</td>
+        <td><button class="delete-btn" onclick="deleteResult('${result.id}')">Delete</button></td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  resultsContainer.innerHTML = html;
+}
+
+function updateStats(results) {
+  const totalResults = results.length;
+  const uniqueStudents = new Set(results.map(r => r.email)).size;
+  const uniqueSubjects = new Set(results.map(r => r.subject)).size;
+  const avgMarks = results.length > 0 
+    ? (results.reduce((sum, r) => sum + r.marks, 0) / results.length).toFixed(2)
+    : 0;
+
+  document.getElementById("totalResults").textContent = totalResults;
+  document.getElementById("totalStudents").textContent = uniqueStudents;
+  document.getElementById("totalSubjects").textContent = uniqueSubjects;
+  document.getElementById("avgMarks").textContent = avgMarks;
+}
+
+// Search and Filter
+document.getElementById("searchEmail").addEventListener("input", filterResults);
+document.getElementById("searchSubject").addEventListener("input", filterResults);
+document.getElementById("passMarks").addEventListener("input", filterResults);
+
+function filterResults() {
+  const emailFilter = document.getElementById("searchEmail").value.toLowerCase();
+  const subjectFilter = document.getElementById("searchSubject").value.toLowerCase();
+
+  const filtered = allResults.filter(result => {
+    const emailMatch = result.email.toLowerCase().includes(emailFilter);
+    const subjectMatch = result.subject.toLowerCase().includes(subjectFilter);
+    return emailMatch && subjectMatch;
+  });
+
+  displayResults(filtered);
+}
+
+// Reset Filters
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.getElementById("searchEmail").value = "";
+  document.getElementById("searchSubject").value = "";
+  displayResults(allResults);
+});
+
+// Delete Result
+window.deleteResult = async function(resultId) {
+  if (!confirm("Are you sure you want to delete this result?")) {
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, "results", resultId));
+
+    // Log the deletion
+    await addDoc(collection(db, "activityLogs"), {
+      action: "Deleted Result",
+      details: "Result ID: " + resultId,
+      adminEmail: currentAdminEmail,
+      timestamp: serverTimestamp()
+    });
+
+    alert("Result deleted successfully!");
+  } catch (error) {
+    alert("Error deleting result: " + error.message);
+  }
+};
+
+let allQuestions = [];
+
+function normalizeText(value) {
+  return (value || "").toString().trim().toLowerCase();
+}
+
+function renderQuestions() {
+  const questionsList = document.getElementById("questionsList");
+
+  const yearFilter = normalizeText(document.getElementById("filterYear").value);
+  const semFilter = normalizeText(document.getElementById("filterSemester").value);
+  const subjectFilter = normalizeText(document.getElementById("filterSubject").value);
+
+  const filtered = allQuestions.filter((q) => {
+    const yearMatch = !yearFilter || normalizeText(q.year).includes(yearFilter);
+    const semMatch = !semFilter || normalizeText(q.semester).includes(semFilter);
+    const subjectMatch = !subjectFilter || normalizeText(q.subject).includes(subjectFilter);
+    return yearMatch && semMatch && subjectMatch;
+  });
+
+  if (!filtered.length) {
+    questionsList.innerHTML = '<div class="no-results">No questions found.</div>';
+    return;
+  }
+
+  let html = "";
+  filtered.forEach((q) => {
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const correct = Number.isFinite(q.correctAnswer) ? q.correctAnswer : q.correctAnswer;
+    html += `
+      <div class="log-card">
+        <strong>${q.year || ""} ${q.semester || ""} - ${q.subject || ""}</strong><br>
+        ${q.questionText || ""}<br>
+        <div class="small-text">
+          0) ${opts[0] || ""}<br>
+          1) ${opts[1] || ""}<br>
+          2) ${opts[2] || ""}<br>
+          3) ${opts[3] || ""}
+        </div>
+        <div class="small-text">Correct: ${correct} | Marks: ${q.marks ?? 1}</div>
+        <button class="delete-btn" onclick="deleteQuestion('${q.id}')">Delete</button>
+      </div>
+    `;
+  });
+
+  questionsList.innerHTML = html;
+}
+
+function loadQuestions() {
+  const questionsQuery = query(
+    collection(db, "questionBank"),
+    orderBy("createdAt", "desc")
+  );
+
+  onSnapshot(questionsQuery, (snapshot) => {
+    allQuestions = [];
+    snapshot.forEach((docSnap) => {
+      allQuestions.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    renderQuestions();
+  });
+}
+
+document.getElementById("applyQuestionFilter").addEventListener("click", () => {
+  renderQuestions();
+});
+
+document.getElementById("addQuestionBtn").addEventListener("click", async () => {
+  const year = document.getElementById("qYear").value.trim();
+  const semester = document.getElementById("qSemester").value.trim();
+  const subject = document.getElementById("qSubject").value.trim();
+  const questionText = document.getElementById("qText").value.trim();
+  const opt1 = document.getElementById("qOpt1").value.trim();
+  const opt2 = document.getElementById("qOpt2").value.trim();
+  const opt3 = document.getElementById("qOpt3").value.trim();
+  const opt4 = document.getElementById("qOpt4").value.trim();
+  const correctAnswer = Number(document.getElementById("qCorrect").value);
+  const marks = Number(document.getElementById("qMarks").value || 1);
+
+  if (!year || !semester || !subject || !questionText || !opt1 || !opt2 || !opt3 || !opt4) {
+    questionMsg.style.color = "red";
+    questionMsg.innerText = "Please fill all fields.";
+    return;
+  }
+
+  if (!Number.isInteger(correctAnswer) || correctAnswer < 0 || correctAnswer > 3) {
+    questionMsg.style.color = "red";
+    questionMsg.innerText = "Correct option index must be 0, 1, 2, or 3.";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "questionBank"), {
+      year,
+      semester,
+      subject,
+      questionText,
+      options: [opt1, opt2, opt3, opt4],
+      correctAnswer,
+      marks,
+      createdAt: serverTimestamp(),
+      createdBy: currentAdminEmail
+    });
+
+    questionMsg.style.color = "green";
+    questionMsg.innerText = "Question added successfully!";
+
+    document.getElementById("qText").value = "";
+    document.getElementById("qOpt1").value = "";
+    document.getElementById("qOpt2").value = "";
+    document.getElementById("qOpt3").value = "";
+    document.getElementById("qOpt4").value = "";
+    document.getElementById("qCorrect").value = "";
+  } catch (error) {
+    questionMsg.style.color = "red";
+    questionMsg.innerText = "Error: " + error.message;
+  }
+});
+
+window.deleteQuestion = async function(questionId) {
+  if (!confirm("Delete this question?")) return;
+
+  try {
+    await deleteDoc(doc(db, "questionBank", questionId));
+    await addDoc(collection(db, "activityLogs"), {
+      action: "Deleted Question",
+      details: "Question ID: " + questionId,
+      adminEmail: currentAdminEmail,
+      timestamp: serverTimestamp()
+    });
+  } catch (error) {
+    alert("Error deleting question: " + error.message);
+  }
+};
+
+</script>
+
+</body>
+</html>
